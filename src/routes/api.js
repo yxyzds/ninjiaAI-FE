@@ -4,7 +4,7 @@ import axios from "axios";
 const token = localStorage.getItem("token");
 
 // 创建一个 axios 实例
-const apiPost = axios.create({
+const apiJson = axios.create({
   baseURL: "http://localhost:3000", // 配置基础 URL
   timeout: 1000, // 可选: 配置请求超时时间
   headers: {
@@ -13,7 +13,7 @@ const apiPost = axios.create({
   },
 });
 
-const apiGet = axios.create({
+const apiParams = axios.create({
   baseURL: "http://localhost:3000", // 配置基础 URL
   timeout: 1000, // 可选: 配置请求超时时间
   headers: {
@@ -25,7 +25,7 @@ const apiGet = axios.create({
 export const getMessageHistory = async (email, windowID) => {
   let res = {};
   try {
-    res = await apiPost.post(
+    res = await apiJson.post(
       "http://localhost:3000/conversation/getConversation",
       {
         email,
@@ -46,7 +46,7 @@ export const getMessageHistory = async (email, windowID) => {
 export const getUserInfo = async (email) => {
   let res = {};
   try {
-    res = await apiGet.get(
+    res = await apiParams.get(
       `http://localhost:3000/users/getUserInfo?email=${email}`
     );
     if (res.status == 200) {
@@ -63,7 +63,7 @@ export const getUserInfo = async (email) => {
 
 export const createChatWindow = async (email, index) => {
   try {
-    const res = await apiPost.post(
+    const res = await apiJson.post(
       `http://127.0.0.1:3000/conversation/createChatWindow`,
       {
         email,
@@ -71,6 +71,44 @@ export const createChatWindow = async (email, index) => {
       }
     );
     if (res.status == 201) {
+      return res;
+    } else {
+      throw new Error(
+        `创建聊天窗口失败，请刷新重试: ${res.status},${res.statusText}`
+      );
+    }
+  } catch (error) {
+    throw new Error(error.response.data.message || "网络请求错误");
+  }
+};
+
+export const editChatWindow = async (windowID, title) => {
+  try {
+    const res = await apiJson.post(
+      `http://127.0.0.1:3000/conversation/editChatWindow`,
+      {
+        windowID,
+        title,
+      }
+    );
+    if (res.status == 200) {
+      return res;
+    } else {
+      throw new Error(
+        `创建聊天窗口失败，请刷新重试: ${res.status},${res.statusText}`
+      );
+    }
+  } catch (error) {
+    throw new Error(error.response.data.message || "网络请求错误");
+  }
+};
+
+export const deleteChatWindow = async (windowID) => {
+  try {
+    const res = await apiParams.delete(
+      `http://127.0.0.1:3000/conversation/deleteChatWindow?windowID=${windowID}`
+    );
+    if (res.status == 200) {
       return res;
     } else {
       throw new Error(

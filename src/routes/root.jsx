@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { NavLink, Form, useNavigate, Outlet } from "react-router-dom";
+import { Form, useNavigate, Outlet } from "react-router-dom";
 import { getUserInfo, createChatWindow } from "./api";
 import { message } from "antd";
 import { useUser } from "../context/userContext";
+import ConversationItem from "./sideBarComponents/ConversationItem";
 
 export default function Root() {
   const [conversations, setConversations] = useState([]);
@@ -18,9 +19,9 @@ export default function Root() {
     async function fetchUserInfo() {
       try {
         const userInfo = await getUserInfo(user.email);
+        console;
         if (userInfo.status === 200) {
           setConversations(userInfo.data.conversations);
-          console.log(userInfo.data.conversations);
         } else {
           setConversations([]);
         }
@@ -32,12 +33,13 @@ export default function Root() {
     fetchUserInfo();
   }, [user.email]);
 
-  const handleSubmit = async () => {
+  const handleCreateWindow = async () => {
     try {
       //获取数组数量，用于默认名称设置
       const lastIndex = conversations.length;
+      console.log(lastIndex, conversations.length);
       const res = await createChatWindow(user.email, lastIndex);
-
+      console.log(res);
       if (res.status == 201) {
         setConversations([res.data.conversation, ...conversations]);
         navigate(`/chatPage/${res.data.conversation.windowID}`);
@@ -45,6 +47,12 @@ export default function Root() {
     } catch (err) {
       message.error(err.message);
     }
+  };
+
+  const handleDeleteConversation = (windowID) => {
+    setConversations(
+      conversations.filter((conv) => conv.windowID !== windowID)
+    );
   };
 
   return (
@@ -63,22 +71,16 @@ export default function Root() {
             <div id="search-spinner" aria-hidden hidden={true} />
             <div className="sr-only" aria-live="polite"></div>
           </Form>
-          <button onClick={handleSubmit}>New</button>
+          <button onClick={handleCreateWindow}>New</button>
         </div>
         <nav>
           <ul>
             {conversations.map((conv) => (
-              <li key={conv.windowID}>
-                <NavLink
-                  to={`chatPage/${conv.windowID}`}
-                  className={({ isActive, isPending }) =>
-                    isActive ? "active" : isPending ? "pending" : ""
-                  }
-                >
-                  {conv.title}
-                  {conv.favorite && <span>★</span>}
-                </NavLink>
-              </li>
+              <ConversationItem
+                key={conv.windowID}
+                conversation={conv}
+                handleDeleteConversation={handleDeleteConversation}
+              />
             ))}
           </ul>
         </nav>
