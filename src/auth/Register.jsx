@@ -1,28 +1,13 @@
 // components/RegisterForm.js
 import React, { useState } from "react";
 import { Form, Input, Button, message } from "antd";
-import api from "./api";
+import { register } from "./api";
 
 const validateMessages = {
   required: "请输入${label}",
   types: {
     email: "${label}格式不正确!",
   },
-};
-
-const register = async (username, email, password) => {
-  let code = 0;
-  try {
-    const res = await api.post("http://127.0.0.1:3000/users/createUser", {
-      username,
-      email,
-      password,
-    });
-    code = res.data.code;
-  } catch (error) {
-    console.error("Error fetching data:", error);
-  }
-  return code;
 };
 
 function Register({ onRegisterSuccess }) {
@@ -32,9 +17,8 @@ function Register({ onRegisterSuccess }) {
   const onFinish = async (values) => {
     setLoading(true);
     const { username, email, password } = values;
-    const code = await register(username, email, password);
-    console.log(code, "code");
-    if (code == 200) {
+    const res = await register(username, email, password);
+    if (res.status == 200) {
       message.success("注册成功！切换到登录");
       form.resetFields();
       onRegisterSuccess();

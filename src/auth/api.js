@@ -10,4 +10,35 @@ const api = axios.create({
   },
 });
 
-export default api;
+export const login = async (email, password) => {
+  try {
+    const res = await api.post("http://127.0.0.1:3000/users/loginUser", {
+      email,
+      password,
+    });
+    if (res.status == 200) {
+      const { token, user } = res.data;
+      localStorage.setItem("token", token);
+      return res;
+    } else {
+      throw new Error(`Unexpected response status: ${res.message}`);
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
+export const register = async (username, email, password) => {
+  let code = 0;
+  try {
+    const res = await api.post("http://127.0.0.1:3000/users/createUser", {
+      username,
+      email,
+      password,
+    });
+    code = res.data.code;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+  return code;
+};

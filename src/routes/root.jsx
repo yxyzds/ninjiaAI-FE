@@ -1,41 +1,56 @@
-import {
-  Outlet,
-  Link,
-  useLoaderData,
-  Form,
-  redirect,
-  NavLink,
-  useNavigation,
-  useSubmit,
-} from "react-router-dom";
-import { getContacts, createContact } from "../contacts";
-import { useEffect } from "react";
-
-export async function loader({ request }) {
-  const url = new URL(request.url);
-  const q = url.searchParams.get("q");
-  const contacts = await getContacts(q);
-  return { contacts, q };
-}
-
-export async function action() {
-  const contact = await createContact();
-  return redirect(`/contacts/${contact.id}/edit`);
-}
+import { useEffect, useState } from "react";
+import { NavLink, Form, useNavigate, Outlet } from "react-router-dom";
+import { getUserInfo, createChatWindow } from "./api";
+import { message } from "antd";
+import { useUser } from "../context/userContext";
 
 export default function Root() {
-  const { contacts, q } = useLoaderData();
-  const navigation = useNavigation();
-  const submit = useSubmit();
+  const [conversations, setConversations] = useState([]);
+  const navigate = useNavigate();
+  const { user } = useUser();
+
+  //测试跳转逻辑
+  if (!user) {
+    navigate("/auth");
+  }
 
   useEffect(() => {
-    document.getElementById("q").value = q;
-  }, [q]);
+    async function fetchUserInfo() {
+      try {
+        const userInfo = await getUserInfo(user.email);
+        if (userInfo.status === 200) {
+          setConversations(userInfo.data.conversations);
+          console.log(userInfo.data.conversations);
+        } else {
+          setConversations([]);
+        }
+      } catch (error) {
+        message.error("Failed to load user info");
+      }
+    }
+
+    fetchUserInfo();
+  }, [user.email]);
+
+  const handleSubmit = async () => {
+    try {
+      //获取数组数量，用于默认名称设置
+      const lastIndex = conversations.length;
+      const res = await createChatWindow(user.email, lastIndex);
+
+      if (res.status == 201) {
+        setConversations([res.data.conversation, ...conversations]);
+        navigate(`/chatPage/${res.data.conversation.windowID}`);
+      }
+    } catch (err) {
+      message.error(err.message);
+    }
+  };
 
   return (
     <>
       <div id="sidebar">
-        <h1>React Router Contacts</h1>
+        <h1>Ninjia AI</h1>
         <div>
           <Form id="search-form" role="search">
             <input
@@ -44,54 +59,32 @@ export default function Root() {
               placeholder="Search"
               type="search"
               name="q"
-              defaultValue={q}
-              onChange={(event) => {
-                submit(event.currentTarget.form);
-              }}
             />
             <div id="search-spinner" aria-hidden hidden={true} />
             <div className="sr-only" aria-live="polite"></div>
           </Form>
-          <Form method="post">
-            <button type="submit">New</button>
-          </Form>{" "}
+          <button onClick={handleSubmit}>New</button>
         </div>
         <nav>
-          {contacts.length ? (
-            <ul>
-              {contacts.map((contact) => (
-                <li key={contact.id}>
-                  <NavLink
-                    to={`contacts/${contact.id}`}
-                    className={({ isActive, isPending }) =>
-                      isActive ? "active" : isPending ? "pending" : ""
-                    }
-                  >
-                    <Link to={`contacts/${contact.id}`}>
-                      {contact.first || contact.last ? (
-                        <>
-                          {contact.first} {contact.last}
-                        </>
-                      ) : (
-                        <i>No Name</i>
-                      )}{" "}
-                      {contact.favorite && <span>★</span>}
-                    </Link>{" "}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>
-              <i>No contacts</i>
-            </p>
-          )}
+          <ul>
+            {conversations.map((conv) => (
+              <li key={conv.windowID}>
+                <NavLink
+                  to={`chatPage/${conv.windowID}`}
+                  className={({ isActive, isPending }) =>
+                    isActive ? "active" : isPending ? "pending" : ""
+                  }
+                >
+                  {conv.title}
+                  {conv.favorite && <span>★</span>}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
         </nav>
       </div>
-      <div
-        id="detail"
-        className={navigation.state === "loading" ? "loading" : ""}
-      >
+
+      <div id="detail">
         <Outlet />
       </div>
     </>

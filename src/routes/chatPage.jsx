@@ -1,40 +1,38 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import api from "./api";
+import { getMessageHistory } from "./api";
+import { useParams } from "react-router-dom";
+import { useUser } from "../context/userContext";
 
 function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const { windowID } = useParams();
+  const { user } = useUser();
+
+  const email = user.email;
 
   useEffect(() => {
-    const getMessageHistory = async (email, windowID) => {
-      let res = {};
+    const initMessages = async () => {
       try {
-        res = await api.post(
-          "http://localhost:3000/chat/getConversationHistory",
-          {
-            email,
-            windowID,
-          }
-        );
-        res = res.data;
+        const res = await getMessageHistory(email, windowID);
+        if (res.status == 200) {
+          setMessages(res.data.messageHistory || []);
+        }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Failed to fetch message history:", error.message);
       }
-      setMessages(res.messageHistory || []);
     };
 
-    getMessageHistory("369@gmail.com", "a58e7d7a-0324-436f-be0c-c66217423d97");
-  }, []);
+    initMessages();
+  }, [windowID]);
 
   const getChatGPTResponse = async (message) => {
-    const email = "369@gmail.com";
-    const windowID = "a58e7d7a-0324-436f-be0c-c66217423d97";
     // 检查请求成功后，建立 SSE 连接
     const eventSource = new EventSource(
       `http://localhost:3000/chat/conversation?email=${email}&windowID=${windowID}&message=${encodeURIComponent(
         message
-      )}`
+      )}&token=${encodeURIComponent(localStorage.getItem("token"))}`
       // { withCredentials: true }
     );
     // 初始化流数据条目
