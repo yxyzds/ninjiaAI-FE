@@ -30,7 +30,7 @@ function ChatPage() {
   const getChatGPTResponse = async (message) => {
     // 检查请求成功后，建立 SSE 连接
     const eventSource = new EventSource(
-      `http://localhost:3000/chat/conversation?email=${email}&windowID=${windowID}&message=${encodeURIComponent(
+      `${import.meta.env.VITE_API_URL}/chat/conversation?email=${email}&windowID=${windowID}&message=${encodeURIComponent(
         message
       )}&token=${encodeURIComponent(localStorage.getItem("token"))}`
       // { withCredentials: true }

@@ -25,7 +25,7 @@ export const getMessageHistory = async (email, windowID) => {
   let res = {};
   try {
     res = await apiJson.post(
-      "http://localhost:3000/conversation/getConversation",
+      "/conversation/getConversation",
       {
         email,
         windowID,
@@ -46,7 +46,7 @@ export const getUserInfo = async (email) => {
   let res = {};
   try {
     res = await apiParams.get(
-      `http://localhost:3000/users/getUserInfo?email=${email}`
+      `/users/getUserInfo?email=${email}`
     );
     if (res.status == 200) {
       return res;
@@ -63,7 +63,7 @@ export const getUserInfo = async (email) => {
 export const createChatWindow = async (email) => {
   try {
     const res = await apiJson.post(
-      `http://127.0.0.1:3000/conversation/createChatWindow`,
+      `/conversation/createChatWindow`,
       {
         email,
       }
@@ -83,7 +83,7 @@ export const createChatWindow = async (email) => {
 export const editChatWindow = async (windowID, title) => {
   try {
     const res = await apiJson.post(
-      `http://127.0.0.1:3000/conversation/editChatWindow`,
+      `/conversation/editChatWindow`,
       {
         windowID,
         title,
@@ -104,7 +104,7 @@ export const editChatWindow = async (windowID, title) => {
 export const deleteChatWindow = async (windowID) => {
   try {
     const res = await apiParams.delete(
-      `http://127.0.0.1:3000/conversation/deleteChatWindow?windowID=${windowID}`
+      `/conversation/deleteChatWindow?windowID=${windowID}`
     );
     if (res.status == 200) {
       return res;
