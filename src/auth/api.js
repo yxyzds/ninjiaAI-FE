@@ -3,7 +3,7 @@ import axios from "axios";
 
 // 创建一个 axios 实例
 const api = axios.create({
-  baseURL: "http://localhost:3000", // 配置基础 URL
+  baseURL: import.meta.env.VITE_API_URL, // 配置基础 URL
   timeout: 1000, // 可选: 配置请求超时时间
   headers: {
     "Content-Type": "application/json",
@@ -17,8 +17,6 @@ export const login = async (email, password) => {
       password,
     });
     if (res.status == 200) {
-      const { token, user } = res.data;
-      localStorage.setItem("token", token);
       return res;
     } else {
       throw new Error(`Unexpected response status: ${res.message}`);

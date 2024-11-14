@@ -2,10 +2,9 @@
 import axios from "axios";
 
 const token = localStorage.getItem("token");
-
 // 创建一个 axios 实例
 const apiJson = axios.create({
-  baseURL: "http://localhost:3000", // 配置基础 URL
+  baseURL: import.meta.env.VITE_API_URL, // 配置基础 URL
   timeout: 1000, // 可选: 配置请求超时时间
   headers: {
     "Content-Type": "application/json",
@@ -14,7 +13,7 @@ const apiJson = axios.create({
 });
 
 const apiParams = axios.create({
-  baseURL: "http://localhost:3000", // 配置基础 URL
+  baseURL: import.meta.env.VITE_API_URL, // 配置基础 URL
   timeout: 1000, // 可选: 配置请求超时时间
   headers: {
     Authorization: `Bearer ${token}`,
@@ -61,13 +60,12 @@ export const getUserInfo = async (email) => {
   }
 };
 
-export const createChatWindow = async (email, index) => {
+export const createChatWindow = async (email) => {
   try {
     const res = await apiJson.post(
       `http://127.0.0.1:3000/conversation/createChatWindow`,
       {
         email,
-        index,
       }
     );
     if (res.status == 201) {

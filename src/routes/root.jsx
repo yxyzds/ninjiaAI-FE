@@ -35,11 +35,7 @@ export default function Root() {
 
   const handleCreateWindow = async () => {
     try {
-      //获取数组数量，用于默认名称设置
-      const lastIndex = conversations.length;
-      console.log(lastIndex, conversations.length);
-      const res = await createChatWindow(user.email, lastIndex);
-      console.log(res);
+      const res = await createChatWindow(user.email);
       if (res.status == 201) {
         setConversations([res.data.conversation, ...conversations]);
         navigate(`/chatPage/${res.data.conversation.windowID}`);
