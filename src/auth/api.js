@@ -10,9 +10,10 @@ const api = axios.create({
   },
 });
 
+
 export const login = async (email, password) => {
   try {
-    const res = await api.post("http://127.0.0.1:3000/users/loginUser", {
+    const res = await api.post("/users/loginUser", {
       email,
       password,
     });
@@ -29,7 +30,7 @@ export const login = async (email, password) => {
 export const register = async (username, email, password) => {
   let code = 0;
   try {
-    const res = await api.post("http://127.0.0.1:3000/users/createUser", {
+    const res = await api.post("/users/createUser", {
       username,
       email,
       password,
