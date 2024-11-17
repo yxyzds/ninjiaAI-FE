@@ -1,7 +1,7 @@
 export default function Index() {
     return (
       <p id="zero-state">
-        This is a demo for React Router.
+        欢迎使用ninjiaAI，这是基于chatgpt的AI服务.
         <br />
         Check out{" "}
         <a href="https://reactrouter.com">

@@ -8,13 +8,17 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import Index from "./routes/index";
 import AuthPage from "./routes/auth";
+import ProtectedRoute from "./ProtectedRoute";
+// import InviteValidation from "./Invitation/InviteValidation";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: (
       <UserProvider>
-        <Root />
+        <ProtectedRoute>
+          <Root />
+        </ProtectedRoute>
       </UserProvider>
     ),
     errorElement: <ErrorPage />,
@@ -34,6 +38,14 @@ const router = createBrowserRouter([
       </UserProvider>
     ),
   },
+  // {
+  //   path: "/invitation",
+  //   element: (
+  //     <UserProvider>
+  //       <InviteValidation />
+  //     </UserProvider>
+  //   ),
+  // },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
