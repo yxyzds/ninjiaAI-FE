@@ -1,0 +1,40 @@
+.sidebar-create-button {
+  display: flex;
+  justify-self: flex-end;
+  margin-bottom: 24px;
+}
+
+.sidebar-container {
+  width: 300px;
+  background-color: #f7f7f7;
+  border-right: 1px solid #e3e3e3;
+  padding: 1rem;
+  transition: transform 0.3s ease; /* 平滑动画 */
+}
+
+.sidebar-container.closed {
+  transform: translateX(-600px); /* 隐藏到屏幕左侧 */
+}
+
+.sidebar-container.open {
+  transform: translateX(0); /* 显示在屏幕上 */
+}
+
+@media (min-width: 769px) {
+  .sidebar-container {
+    flex-direction: row;
+  }
+
+  .sidebar-container.closed {
+    transform: translateX(0); /* 始终显示 */
+  }
+}
+
+/* mobile */
+@media (max-width: 768px) {
+  .sidebar-container {
+    position: absolute;
+    z-index: 100;
+    height:100vh;
+  }
+}

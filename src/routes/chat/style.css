@@ -1,0 +1,39 @@
+/* 默认样式：桌面端 */
+.chat-box {
+  min-height: 60vh;
+  padding: 8px 12px 8px 12px;
+  overflow-x: hidden;
+}
+
+.chat-container {
+  position: relative;
+  min-width: 40vw;
+  max-width: 920px;
+  margin: 0 auto; /* 居中 */
+  padding: 16px 16px 0 16px;
+  background-color: #ffffff;
+  overflow-y: auto;
+}
+
+/* 移动端样式 */
+/* 媒体查询：适配视窗宽度 <= 768px 的设备（例如移动端） */
+@media screen and (max-width: 769px) {
+  .chat-box {
+    width: 100%; /* 占满父容器 */
+    padding: 8px; /* 减小内边距 */
+    height: 70vh; /* 减小高度 */
+  }
+  .chat-container {
+    min-width: 80vw;
+    max-width: 100vw;
+  }
+
+  .input {
+    font-size: 14px; /* 缩小字体 */
+  }
+
+  .send-button {
+    padding: 8px 12px; /* 缩小按钮尺寸 */
+    font-size: 14px;
+  }
+}

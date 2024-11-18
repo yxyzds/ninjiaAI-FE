@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
-import { getMessageHistory } from "./api";
+import { getMessageHistory } from "../api";
 import { useParams } from "react-router-dom";
-import { useUser } from "../context/userContext";
+import { useUser } from "../../context/userContext";
+import Message from "./components/Message";
+import InputBox from "./components/inputBox/inputBox";
+
+import "./style.css";
 
 function ChatPage() {
   const [messages, setMessages] = useState([]);
@@ -30,13 +33,19 @@ function ChatPage() {
   const getChatGPTResponse = async (message) => {
     // 检查请求成功后，建立 SSE 连接
     const eventSource = new EventSource(
-      `${import.meta.env.VITE_API_URL}/chat/conversation?email=${email}&windowID=${windowID}&message=${encodeURIComponent(
+      `${
+        import.meta.env.VITE_API_URL
+      }/chat/conversation?email=${email}&windowID=${windowID}&message=${encodeURIComponent(
         message
       )}&token=${encodeURIComponent(localStorage.getItem("token"))}`
       // { withCredentials: true }
     );
     // 初始化流数据条目
-    const initialTempMessage = { role: "assistant", content: "" };
+    const initialTempMessage = {
+      role: "assistant",
+      content: "",
+      loading: true,
+    };
     setMessages((prevMessages) => {
       return [...prevMessages, initialTempMessage];
     });
@@ -55,6 +64,7 @@ function ChatPage() {
             content:
               updatedMessages[lastIndex].content +
               event.data.replace(/\\n/g, "\n"),
+            loading: false,
             // 将 event.data 逐字符添加到当前消息的 content 中，解码换行符
           };
 
@@ -87,100 +97,24 @@ function ChatPage() {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.chatBox}>
+    <div className="chat-container">
+      <div className="chat-box">
         {messages.map((message, index) => (
-          <div
+          <Message
             key={index}
-            style={
-              message.role === "user"
-                ? styles.userMessage
-                : styles.chatgptMessage
-            }
-          >
-            <ReactMarkdown>{message.content}</ReactMarkdown>
-          </div>
+            content={message.content}
+            role={message.role}
+            isLoading={message.loading}
+          />
         ))}
       </div>
-
-      <div style={styles.inputContainer}>
-        <input
-          type="text"
-          placeholder="输入消息..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          style={styles.input}
-          onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-        />
-        <button onClick={handleSendMessage} style={styles.sendButton}>
-          发送
-        </button>
-      </div>
+      <InputBox
+        value={input}
+        onChange={setInput}
+        onSendMessage={handleSendMessage}
+      />
     </div>
   );
 }
 
 export default ChatPage;
-
-const styles = {
-  container: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    alignItems: "center",
-    height: "100vh",
-    padding: "16px",
-    backgroundColor: "#f5f5f5",
-  },
-  chatBox: {
-    width: "100%",
-    maxHeight: "80%",
-    overflowY: "auto",
-    padding: "16px",
-    backgroundColor: "#ffffff",
-    borderRadius: "8px",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-    marginBottom: "16px",
-  },
-  userMessage: {
-    alignSelf: "flex-end",
-    backgroundColor: "#e1f5fe",
-    padding: "10px",
-    borderRadius: "8px",
-    margin: "8px 0",
-    maxWidth: "70%",
-  },
-  chatgptMessage: {
-    alignSelf: "flex-start",
-    backgroundColor: "#e0e0e0",
-    padding: "10px",
-    borderRadius: "8px",
-    margin: "8px 0",
-    maxWidth: "70%",
-  },
-  inputContainer: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
-    maxWidth: "800px",
-  },
-  input: {
-    flex: 1,
-    padding: "10px",
-    fontSize: "16px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-    outline: "none",
-    marginRight: "8px",
-  },
-  sendButton: {
-    padding: "10px 16px",
-    fontSize: "16px",
-    backgroundColor: "#4CAF50",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-  },
-};

@@ -1,0 +1,39 @@
+.input-box-container {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 99;
+}
+
+.input-box-wrapper {
+  display: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-button {
+  background-color: #f5f5f5;
+  border: none;
+  cursor: pointer;
+}
+
+.input-area {
+  flex: 1;
+  border-radius: 20px;
+  border: 1px solid #d9d9d9;
+  padding: 8px 12px;
+}
+
+.send-button {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 1; /* 确保按钮在最上层 */
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
