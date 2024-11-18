@@ -1,0 +1,36 @@
+.message {
+  padding: 10px;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+.message.user {
+  align-self: flex-end;
+}
+
+.message.assistant {
+  align-self: flex-start;
+  background-color: #e1f2fe;
+}
+
+.message-icon {
+  font-size: 24px;
+}
+
+.chatgpt-icon {
+  color: #52c41a;
+  width: 24px;
+  height: 24px;
+}
+
+.message-content {
+  word-wrap: break-word;
+}
+
+.message-copy {
+  justify-content: flex-end;
+  display: flex;
+  font-size: 12px;
+  color: #888;
+  cursor: pointer;
+}

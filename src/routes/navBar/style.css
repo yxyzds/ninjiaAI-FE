@@ -1,0 +1,84 @@
+/* 1. 1200px 或以上被视为笔记本电脑和台式机尺寸。
+2. 768px 到 1024px 被认为是平板尺寸。
+3. 767px 或以下被视为移动设备尺寸。 */
+
+/* Header 样式 */
+.navbar-header {
+  padding: 10px;
+  position: fixed;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  background-color: #497493;
+  display: flex;
+  align-items: center;
+  max-height: 64px;
+}
+
+/* Container 样式 */
+.navbar-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0 16px;
+  /* max-width: 1600px; */
+  margin: 0 auto;
+}
+
+.navbar-menu-button {
+  font-size: 24px;
+  color: white;
+  cursor: pointer;
+}
+
+/* Logo 样式 */
+.navbar-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  margin-right: 120px;
+}
+
+.navbar-contact {
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+}
+
+/* Menu 样式 */
+.navbar-menu {
+  display: flex;
+  justify-content: flex-end;
+  flex-grow: 1;
+}
+
+/* Menu Item 链接样式 */
+.navbar-menu a {
+  color: white; /* 白色字体 */
+  text-decoration: none; /* 去掉下划线 */
+}
+
+/* Menu Item hover 状态 */
+.navbar-menu a:hover {
+  color: #40a9ff; /* hover 状态使用 Ant Design 高亮色 */
+}
+
+/* Menu Item active 状态 */
+.ant-menu-item-selected a {
+  color: #1890ff; /* active 状态字体颜色 */
+}
+
+/* mobile */
+@media (max-width: 767px) {
+  .navbar-header {
+    max-height: 52px;
+  }
+}
+
+/* tablet */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .navbar-header {
+    max-height: 52px;
+  }
+}

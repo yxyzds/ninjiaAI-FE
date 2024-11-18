@@ -16,7 +16,7 @@ function AuthPage() {
       {/* Logo 区域 */}
       <div style={styles.logoContainer}>
         {/* 在此插入你的 SVG logo */}
-        <img src="/react.svg" alt="Logo" width="100" height="100" />;
+        <img src="/react.svg" alt="Logo" width="100" height="100" />
         {/* <Logo width="60" height="60" /> */}
       </div>
       <Card style={styles.card} bordered={false}>
