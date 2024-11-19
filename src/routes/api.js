@@ -45,7 +45,6 @@ export const getMessageHistory = async (email, windowID) => {
       email,
       windowID,
     });
-    console.log(data);
     return data;
   } catch (error) {
     throw new Error("获取消息历史失败,服务端错误");

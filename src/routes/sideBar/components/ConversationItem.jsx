@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Input, Button, Row, Col } from "antd";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Input, Dropdown, Menu, Row, Col, message } from "antd";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 import { deleteChatWindow, editChatWindow } from "../../api";
 import "./style.css";
 import { icons } from "antd/es/image/PreviewGroup";
@@ -34,15 +38,27 @@ export default function ConversationItem({
     }
   };
 
+  const items = [
+    {
+      key: "edit",
+      label: "Edit",
+      icon: <EditOutlined />,
+      onClick: () => setIsEditing(true),
+    },
+    {
+      key: "delete",
+      label: "Delete",
+      icon: <DeleteOutlined />,
+      onClick: () => handleDeleteWindow(conversation.windowID),
+    },
+  ];
+
   return (
     <Row
       className="conversation-item"
-      justify="space-between"
-      align="middle"
       key={conversation.windowID}
-      gutter={2}
     >
-      <Col flex="1" span={16}>
+      <Col flex="1" span={20}>
         {isEditing ? (
           <Input
             type="text"
@@ -56,24 +72,35 @@ export default function ConversationItem({
             to={`chatPage/${conversation.windowID}`}
             className={({ isActive }) => (isActive ? "active" : "")}
           >
-            {title.length > 10 ? `${title.slice(0, 10)}...` : title}
+            {title.length > 16 ? `${title.slice(0, 16)}...` : title}
           </NavLink>
         )}
       </Col>
       <Col span={2}>
-        <Button
+        {/* <Button
           className="edit-button"
           onClick={() => setIsEditing(true)}
           icon={<EditOutlined />}
-        />
+        /> */}
+
+        <Dropdown
+          menu={{ items }}
+          trigger={["click"]}
+          placement="bottomRight"
+          dropdownRender={(menu) => (
+            <div style={{ transform: "translateX(80px)" }}>{menu}</div>
+          )}
+        >
+          <SettingOutlined style={{ fontSize: "18px", cursor: "pointer" }} />
+        </Dropdown>
       </Col>
-      <Col span={2}>
+      {/* <Col span={2}>
         <Button
           className="delete-button"
           onClick={() => handleDeleteWindow(conversation.windowID)}
           icon={<DeleteOutlined />}
         />
-      </Col>
+      </Col> */}
     </Row>
   );
 }

@@ -1,8 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import { UserOutlined, RobotOutlined, CopyOutlined } from "@ant-design/icons";
+import { UserOutlined, OpenAIOutlined, CopyOutlined } from "@ant-design/icons";
 import { Row, Col, message as antdMessage, Spin } from "antd";
-import chatgptIcon from "../assets/chatgpt.svg"; // 引入本地的 SVG 文件
 
 import "./style.css";
 
@@ -29,11 +28,7 @@ const Message = ({ content, role, isLoading }) => {
           {role === "user" ? (
             <UserOutlined className="user-icon" />
           ) : (
-            <img
-              src="/public/chatgpt-6.svg"
-              alt="ChatGPT"
-              className="chatgpt-icon"
-            />
+            <OpenAIOutlined  className="chatgpt-icon"/>
           )}
         </div>
       </Col>

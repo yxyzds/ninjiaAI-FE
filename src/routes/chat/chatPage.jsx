@@ -15,7 +15,6 @@ function ChatPage() {
   const { user } = useUser();
 
   const email = user.email;
-  console.log(email, "asdas");
   useEffect(() => {
     const initMessages = async () => {
       try {
