@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { useUser } from "../../context/userContext";
 import Message from "./components/Message";
 import InputBox from "./components/inputBox/inputBox";
+import { message as messageNotification } from "antd";
 
 import "./style.css";
 
@@ -14,16 +15,18 @@ function ChatPage() {
   const { user } = useUser();
 
   const email = user.email;
-
+  console.log(email, "asdas");
   useEffect(() => {
     const initMessages = async () => {
       try {
-        const res = await getMessageHistory(email, windowID);
-        if (res.status == 200) {
-          setMessages(res.data.messageHistory || []);
+        const data = await getMessageHistory(email, windowID);
+        if (data.success) {
+          setMessages(data.messageHistory || []);
+        } else {
+          messageNotification.error(data.message);
         }
       } catch (error) {
-        console.error("Failed to fetch message history:", error.message);
+        messageNotification.error("获取对话消息错误，请刷新重试");
       }
     };
 

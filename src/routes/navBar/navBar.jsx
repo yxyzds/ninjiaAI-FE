@@ -7,7 +7,6 @@ import { MenuOutlined } from "@ant-design/icons";
 const Navbar = ({ visible, setVisible }) => {
   const navigate = useNavigate();
   const onChangeMenuVisible = () => {
-    console.log('abc')
     setVisible(!visible);
   };
 

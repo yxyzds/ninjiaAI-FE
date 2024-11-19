@@ -70,14 +70,14 @@
 }
 
 /* mobile */
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .navbar-header {
     max-height: 52px;
   }
 }
 
 /* tablet */
-@media (min-width: 768px) and (max-width: 1024px) {
+@media (min-width: 769px) and (max-width: 1024px) {
   .navbar-header {
     max-height: 52px;
   }
