@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { message, Row, Col, Button } from "antd";
 import ConversationItem from "./components/ConversationItem";
 import { Form, useNavigate, Outlet } from "react-router-dom";
@@ -7,10 +7,12 @@ import { getUserInfo, createChatWindow } from "../api";
 import "./style.css";
 import { PlusOutlined } from "@ant-design/icons";
 
-function SideBar({ visible }) {
+function SideBar({ visible, setVisible }) {
   const [conversations, setConversations] = useState([]);
   const navigate = useNavigate();
   const { user } = useUser();
+  const sidebarRef = useRef(null);
+
   //测试跳转逻辑
   if (!user) {
     navigate("/auth");
@@ -34,6 +36,21 @@ function SideBar({ visible }) {
     fetchUserInfo();
   }, [user.email]);
 
+  useEffect(() => {
+    // 点击 sidebar 外部区域时关闭 sidebar
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleCreateWindow = async () => {
     try {
       const res = await createChatWindow(user.email);
@@ -52,7 +69,10 @@ function SideBar({ visible }) {
     );
   };
   return (
-    <div className={`sidebar-container ${visible ? "open" : "closed"}`}>
+    <div
+      ref={sidebarRef}
+      className={`sidebar-container ${visible ? "open" : "closed"}`}
+    >
       <div className="nav-gutter"></div>
       <div className="sidebar">
         {/* <h1>do some test</h1> */}

@@ -4,6 +4,10 @@
   margin: 8px 0;
 }
 
+.message p {
+  font-size: 16px !important;
+}
+
 .message.user {
   align-self: flex-end;
 }
@@ -18,7 +22,6 @@
 }
 
 .chatgpt-icon {
-  color: #52c41a;
   width: 24px;
   height: 24px;
 }

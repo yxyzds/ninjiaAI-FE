@@ -12,17 +12,13 @@ const api = axios.create({
 
 export const login = async (email, password) => {
   try {
-    const res = await api.post("/users/loginUser", {
+    const { data } = await api.post("/users/loginUser", {
       email,
       password,
     });
-    if (res.status == 200) {
-      return res;
-    } else {
-      throw new Error(`Unexpected response status: ${res.message}`);
-    }
+    return data;
   } catch (error) {
-    console.error("Error fetching data:", error);
+    throw new Error("用户登录服务错误");
   }
 };
 

@@ -1,5 +1,5 @@
 // components/LoginForm.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Input, Button, message } from "antd";
 import { useNavigate } from "react-router-dom";
 import { login } from "./api";
@@ -18,20 +18,26 @@ function Login() {
   const { setUser } = useUser();
 
   const onFinish = async (values) => {
-    setLoading(true);
-    const { email, password } = values;
-    const res = await login(email, password);
-    if (res.status == 200) {
-      message.success("登录成功!");
-      const { token, user } = res.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      setUser(user);
-      navigate("/"); // 登录成功后跳转到主页
-    } else {
-      message.error("账号或密码错误");
+    try {
+      setLoading(true);
+      const { email, password } = values;
+      const data = await login(email, password);
+      if (data.success) {
+        const { token, user: userInfo } = data;
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(userInfo));
+        await setUser(userInfo);
+        navigate("/");
+      } else {
+        message.error(data.message);
+      }
+
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      console.error(err);
+      message.error("出现了未知错误，请稍后重试！");
     }
-    setLoading(false);
   };
 
   return (
