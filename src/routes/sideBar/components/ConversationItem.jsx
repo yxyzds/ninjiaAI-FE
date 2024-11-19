@@ -54,10 +54,7 @@ export default function ConversationItem({
   ];
 
   return (
-    <Row
-      className="conversation-item"
-      key={conversation.windowID}
-    >
+    <Row className="conversation-item" key={conversation.windowID}>
       <Col flex="1" span={20}>
         {isEditing ? (
           <Input
@@ -90,6 +87,7 @@ export default function ConversationItem({
           dropdownRender={(menu) => (
             <div style={{ transform: "translateX(80px)" }}>{menu}</div>
           )}
+          getPopupContainer={(triggerNode) => triggerNode.parentNode}
         >
           <SettingOutlined style={{ fontSize: "18px", cursor: "pointer" }} />
         </Dropdown>
