@@ -25,7 +25,6 @@ html {
   justify-content: space-between;
   align-items: center;
   height: calc(100% - 64px);
-  padding: 16px;
   margin: 10px;
 }
 
