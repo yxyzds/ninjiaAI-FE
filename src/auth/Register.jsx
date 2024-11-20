@@ -108,7 +108,7 @@ function Register({ onRegisterSuccess }) {
         <Input type="email" />
       </Form.Item>
       <Form.Item
-        label="邮箱验证码"
+        label="邮箱验证asda码"
         name="verificationCode"
         rules={[{ required: true }]}
       >
