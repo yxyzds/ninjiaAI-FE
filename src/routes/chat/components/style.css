@@ -19,6 +19,7 @@
 
 .message-icon {
   font-size: 24px;
+  padding-top: 10px;
 }
 
 .chatgpt-icon {
@@ -31,9 +32,14 @@
 }
 
 .message-copy {
+  margin-top: 24px;
   justify-content: flex-end;
   display: flex;
-  font-size: 12px;
+  font-size: 24px;
   color: #888;
   cursor: pointer;
+}
+
+.message-content pre {
+  overflow-x: auto;
 }

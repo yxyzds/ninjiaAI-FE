@@ -1,34 +1,44 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { UserOutlined, OpenAIOutlined, CopyOutlined } from "@ant-design/icons";
-import { Row, Col, message as antdMessage, Spin } from "antd";
+import {
+  UserOutlined,
+  OpenAIOutlined,
+  CopyOutlined,
+  CheckOutlined,
+} from "@ant-design/icons";
+import { Row, Col, message as antdMessage, Spin, Popover } from "antd";
 
 import "./style.css";
 
 const Message = ({ content, role, isLoading }) => {
+  const [copied, setCopy] = useState(false);
   const onCopy = (content) => {
     navigator.clipboard
       .writeText(content)
       .then(() => {
-        antdMessage.success("消息已复制到剪贴板");
+        setCopy(true);
+        setTimeout(() => {
+          setCopy(false);
+        }, 3000);
+        // antdMessage.success("消息已复制到剪贴板");
       })
       .catch((err) => {
         console.error("复制失败：", err);
-        antdMessage.error("复制失败，请重试");
+        // antdMessage.error("复制失败，请重试");
       });
   };
 
   return (
     <Row
       className={`message ${role === "user" ? "user" : "assistant"}`}
-      gutter={4}
+      gutter={2}
     >
       <Col span={4}>
         <div className="message-icon">
           {role === "user" ? (
             <UserOutlined className="user-icon" />
           ) : (
-            <OpenAIOutlined  className="chatgpt-icon"/>
+            <OpenAIOutlined className="chatgpt-icon" />
           )}
         </div>
       </Col>
@@ -42,8 +52,11 @@ const Message = ({ content, role, isLoading }) => {
         </div>
         {role === "assistant" ? (
           <div className="message-copy" onClick={() => onCopy(content)}>
-            <CopyOutlined className="message-copy-icon" />
-            复制
+            {copied ? (
+              <CheckOutlined className="message-copy-icon" />
+            ) : (
+              <CopyOutlined className="message-copy-icon" />
+            )}
           </div>
         ) : null}
       </Col>

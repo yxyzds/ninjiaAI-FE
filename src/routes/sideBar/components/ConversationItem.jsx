@@ -91,11 +91,14 @@ export default function ConversationItem({
           trigger={["click"]}
           placement="bottomRight"
           dropdownRender={(menu) => (
-            <div style={{ transform: "translateX(80px)" }}>{menu}</div>
+            <div className="conversation-item-editMenu">{menu}</div>
           )}
+          overlayStyle={{
+            position: "fixed", // 保证菜单不受父级影响
+          }}
           getPopupContainer={(triggerNode) => triggerNode.parentNode}
         >
-          <SettingOutlined style={{ fontSize: "18px", cursor: "pointer" }} />
+          <SettingOutlined style={{ fontSize: "16px", cursor: "pointer" }} />
         </Dropdown>
       </Col>
       {/* <Col span={2}>
