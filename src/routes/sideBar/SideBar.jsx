@@ -87,6 +87,7 @@ function SideBar({ visible, setVisible }) {
               <ConversationItem
                 key={conv.windowID}
                 conversation={conv}
+                setVisible={setVisible}
                 handleDeleteConversation={handleDeleteConversation}
               />
             ))}

@@ -74,6 +74,9 @@
   .navbar-header {
     max-height: 52px;
   }
+  .navbar-logo {
+    margin-right: 40px;
+  }
 }
 
 /* tablet */

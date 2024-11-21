@@ -38,8 +38,7 @@ function AuthPage() {
           <>
             <Verify handleVerifySuccess={handleVerifySuccess} />
             <p className="auth-link">
-              已有账号,{" "}
-              <span onClick={() => setCurrentForm("login")}>前往登录</span>
+              <span onClick={() => setCurrentForm("login")}>已有账号,前往登录</span>
             </p>
           </>
         );
@@ -51,8 +50,7 @@ function AuthPage() {
               onRegisterSuccess={onRegisterSuccess}
             />
             <p className="auth-link">
-              已有账号？{" "}
-              <span onClick={() => setCurrentForm("login")}>登录</span>
+              <span onClick={() => setCurrentForm("login")}>已有账号,前往登录</span>
             </p>
           </>
         );
