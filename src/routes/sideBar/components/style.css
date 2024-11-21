@@ -5,6 +5,10 @@
   transition: background-color 0.3s ease;
 }
 
+.conversation-item-editMenu {
+  transform: translateX(80px);
+}
+
 /* 鼠标悬停时的背景色变化 */
 .conversation-item:hover {
   background-color: #f9f9f9;
