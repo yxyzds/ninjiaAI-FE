@@ -1,0 +1,47 @@
+/* 设置容器的样式 */
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh; /* 垂直方向完全居中 */
+  padding: 20px; /* 为小屏幕提供额外的内边距 */
+  background-color: #f5f5f5; /* 设置背景色 */
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.auth-card {
+  max-width: 400px; /* 限制表单宽度以适配桌面端和移动端 */
+  width: 100%; /* 在移动端占满宽度 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+  border-radius: 10px; /* 设置圆角 */
+  overflow-y: auto; /* 内部滚动 */
+}
+
+/* 调整Logo样式 */
+.auth-container img {
+  margin-bottom: 20px; /* 图标与表单之间的间距 */
+  border-radius: 50%; /* 可选：设置圆形Logo */
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 10px; /* 减少小屏幕的内边距 */
+  }
+  .auth-card {
+    max-width: 90%; /* 更窄的宽度适配移动端 */
+  }
+}
+
+.auth-link {
+  margin-top: 20px;
+  text-align: center;
+  color: #1890ff;
+  cursor: pointer;
+}
+
+.auth-link span:hover {
+  text-decoration: underline;
+}

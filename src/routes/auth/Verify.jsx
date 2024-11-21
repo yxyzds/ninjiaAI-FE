@@ -6,6 +6,7 @@ import {
   verifyVerificationCode,
   verifyInvitationCode,
 } from "./api";
+import NinjiaForm from "../../components/NinjiaForm";
 
 const validateMessages = {
   required: "请输入${label}",
@@ -14,17 +15,35 @@ const validateMessages = {
   },
 };
 
-function Register({ onRegisterSuccess }) {
+function Verify({ handleVerifySuccess, onRegisterSuccess }) {
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0); // 倒计时状态
   const [form] = Form.useForm(); // 创建 Form 实例
+
+  const verifyInvitation = async (email, invitationCode) => {
+    const invitationRes = await verifyInvitationCode(email, invitationCode);
+    if (invitationRes.success) {
+      return true;
+    }
+    return false;
+  };
 
   // 获取验证码
   const handleSendCode = async () => {
     try {
       const email = form.getFieldValue("email");
+      const invitationCode = form.getFieldValue("invitationCode");
       if (!email) {
         message.error("请先填写邮箱地址");
+        return;
+      }
+      if (!invitationCode) {
+        message.error("请输入邀请码");
+        return;
+      }
+      const invitationVerifed = await verifyInvitation(email, invitationCode);
+      if (!invitationVerifed) {
+        message.error("邀请码过期或失效");
         return;
       }
       setCountdown(60); // 设置倒计时为 60 秒
@@ -54,8 +73,7 @@ function Register({ onRegisterSuccess }) {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const { username, email, password, verificationCode, invitationCode } =
-        values;
+      const { email, verificationCode, invitationCode } = values;
       const verifyRes = await verifyVerificationCode(email, verificationCode);
       const invitationRes = await verifyInvitationCode(email, invitationCode);
       if (!invitationRes.success) {
@@ -68,47 +86,38 @@ function Register({ onRegisterSuccess }) {
           verifyRes.message || "邮箱验证码验证失败！请检查输入或重新获取"
         );
       }
-      const res = await register(username, email, password, verificationCode);
-      if (res.status === 200) {
-        message.success("注册成功！切换到登录页面", 8);
-        form.resetFields();
-        onRegisterSuccess();
-        setLoading(false);
-      } else {
-        message.error(res.message || "注册失败，请重试");
+      if (verifyRes.success && invitationRes.success) {
+        handleVerifySuccess({ email, verificationCode, invitationCode });
       }
     } catch (err) {
-      message.error(err.message || "注册服务失败，请稍后重试");
+      message.error(err.message || "验证服务失败，请稍后重试");
     }
     setLoading(false);
   };
 
   return (
-    <Form
+    <NinjiaForm
       form={form}
       layout="vertical"
       onFinish={onFinish}
       validateMessages={validateMessages}
     >
-      <Form.Item label="用户名" name="username" rules={[{ required: true }]}>
-        <Input />
-      </Form.Item>
-      <Form.Item
+      <NinjiaForm.Item
         label="邀请码"
         name="invitationCode"
         rules={[{ required: true }]}
       >
         <Input />
-      </Form.Item>
-      <Form.Item
+      </NinjiaForm.Item>
+      <NinjiaForm.Item
         label="邮箱"
         name="email"
         rules={[{ required: true, type: "email" }]}
       >
         <Input type="email" />
-      </Form.Item>
-      <Form.Item
-        label="邮箱验证asda码"
+      </NinjiaForm.Item>
+      <NinjiaForm.Item
+        label="邮箱验证码"
         name="verificationCode"
         rules={[{ required: true }]}
       >
@@ -123,35 +132,14 @@ function Register({ onRegisterSuccess }) {
             </Button>
           }
         />
-      </Form.Item>
-      <Form.Item label="密码" name="password" rules={[{ required: true }]}>
-        <Input.Password />
-      </Form.Item>
-      <Form.Item
-        label="确认密码"
-        name="confirmPassword"
-        dependencies={["password"]}
-        rules={[
-          { required: true, message: "请确认密码" },
-          ({ getFieldValue }) => ({
-            validator(_, value) {
-              if (!value || getFieldValue("password") === value) {
-                return Promise.resolve();
-              }
-              return Promise.reject(new Error("两次输入密码不匹配"));
-            },
-          }),
-        ]}
-      >
-        <Input.Password />
-      </Form.Item>
-      <Form.Item>
+      </NinjiaForm.Item>
+      <NinjiaForm.Item>
         <Button type="primary" htmlType="submit" loading={loading} block>
-          注 册
+           下 一 步
         </Button>
-      </Form.Item>
-    </Form>
+      </NinjiaForm.Item>
+    </NinjiaForm>
   );
 }
 
-export default Register;
+export default Verify;

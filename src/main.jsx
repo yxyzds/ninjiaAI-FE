@@ -7,7 +7,7 @@ import { UserProvider } from "./context/userContext";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import Index from "./routes/index";
-import AuthPage from "./routes/auth";
+import AuthPage from "./routes/auth/auth";
 import ProtectedRoute from "./ProtectedRoute";
 // import InviteValidation from "./Invitation/InviteValidation";
 
