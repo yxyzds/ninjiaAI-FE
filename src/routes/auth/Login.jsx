@@ -1,9 +1,10 @@
 // components/LoginForm.js
 import React, { useState, useEffect } from "react";
-import { Form, Input, Button, message } from "antd";
+import { Input, Button, message } from "antd";
+import NinjiaForm from "../../components/NinjiaForm";
 import { useNavigate } from "react-router-dom";
 import { login } from "./api";
-import { useUser } from "../context/userContext";
+import { useUser } from "../../context/userContext";
 
 const validateMessages = {
   required: "请输入${label}",
@@ -41,12 +42,12 @@ function Login() {
   };
 
   return (
-    <Form
+    <NinjiaForm
       layout="vertical"
       onFinish={onFinish}
       validateMessages={validateMessages}
     >
-      <Form.Item
+      <NinjiaForm.Item
         label="邮箱"
         name="email"
         rules={[
@@ -57,16 +58,20 @@ function Login() {
         ]}
       >
         <Input />
-      </Form.Item>
-      <Form.Item label="密码" name="password" rules={[{ required: true }]}>
+      </NinjiaForm.Item>
+      <NinjiaForm.Item
+        label="密码"
+        name="password"
+        rules={[{ required: true }]}
+      >
         <Input.Password />
-      </Form.Item>
-      <Form.Item>
+      </NinjiaForm.Item>
+      <NinjiaForm.Item>
         <Button type="primary" htmlType="submit" loading={loading} block>
           登 录
         </Button>
-      </Form.Item>
-    </Form>
+      </NinjiaForm.Item>
+    </NinjiaForm>
   );
 }
 
