@@ -13,6 +13,7 @@ import { icons } from "antd/es/image/PreviewGroup";
 export default function ConversationItem({
   conversation,
   handleDeleteConversation,
+  setVisible,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(conversation.title);
@@ -38,16 +39,20 @@ export default function ConversationItem({
     }
   };
 
+  const closeSidebarInMobile = () => {
+    setVisible(false);
+  };
+
   const items = [
     {
       key: "edit",
-      label: "Edit",
+      label: "重命名",
       icon: <EditOutlined />,
       onClick: () => setIsEditing(true),
     },
     {
       key: "delete",
-      label: "Delete",
+      label: "删除",
       icon: <DeleteOutlined />,
       onClick: () => handleDeleteWindow(conversation.windowID),
     },
@@ -68,6 +73,7 @@ export default function ConversationItem({
           <NavLink
             to={`chatPage/${conversation.windowID}`}
             className={({ isActive }) => (isActive ? "active" : "")}
+            onClick={closeSidebarInMobile}
           >
             {title.length > 16 ? `${title.slice(0, 16)}...` : title}
           </NavLink>
