@@ -118,3 +118,31 @@ export const deleteChatWindow = async (windowID) => {
     throw new Error(error.response.data.message || "网络请求错误");
   }
 };
+
+export const generateInvitationCode = async (email) => {
+  try {
+    const res = await apiParams.get(
+      `/invite/generateInviteCode?email=${email}`
+    );
+    if (res.status == 200) {
+      return res;
+    } else {
+      throw new Error(`创建邀请码失败: ${res.status},${res.statusText}`);
+    }
+  } catch (error) {
+    throw new Error(error.response.data.message || "网络请求错误");
+  }
+};
+
+export const getInvitationCode = async (email) => {
+  try {
+    const res = await apiParams.get(`/invite/getInviteCode?email=${email}`);
+    if (res.status == 200) {
+      return res;
+    } else {
+      throw new Error(`创建邀请码失败: ${res.status},${res.statusText}`);
+    }
+  } catch (error) {
+    throw new Error(error.response.data.message || "网络请求错误");
+  }
+};

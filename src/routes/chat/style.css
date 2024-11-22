@@ -23,6 +23,7 @@
     padding: 8px; /* 减小内边距 */
     height: 70vh; /* 减小高度 */
   }
+  
   .chat-container {
     min-width: 80vw;
     max-width: 100vw;
