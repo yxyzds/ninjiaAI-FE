@@ -91,12 +91,17 @@ export default function ConversationItem({
           trigger={["click"]}
           placement="bottomRight"
           dropdownRender={(menu) => (
-            <div className="conversation-item-editMenu">{menu}</div>
+            <div
+              className="conversation-item-editMenu"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {menu}
+            </div>
           )}
           overlayStyle={{
-            position: "fixed", // 保证菜单不受父级影响
+            position: "fixed",
           }}
-          getPopupContainer={(triggerNode) => triggerNode.parentNode}
+          getPopupContainer={() => document.body} //挂载到body上保证不被遮挡
         >
           <SettingOutlined style={{ fontSize: "16px", cursor: "pointer" }} />
         </Dropdown>

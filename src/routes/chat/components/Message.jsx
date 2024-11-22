@@ -33,7 +33,7 @@ const Message = ({ content, role, isLoading }) => {
       className={`message ${role === "user" ? "user" : "assistant"}`}
       gutter={2}
     >
-      <Col span={4}>
+      <Col span={3}>
         <div className="message-icon">
           {role === "user" ? (
             <UserOutlined className="user-icon" />

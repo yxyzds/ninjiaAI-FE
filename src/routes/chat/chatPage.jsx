@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { useUser } from "../../context/userContext";
 import Message from "./components/Message";
 import InputBox from "./components/inputBox/inputBox";
+import IntroductionCards from "../../components/introduction/introduction";
 import { message as messageNotification } from "antd";
 
 import "./style.css";
@@ -101,14 +102,18 @@ function ChatPage() {
   return (
     <div className="chat-container">
       <div className="chat-box">
-        {messages.map((message, index) => (
-          <Message
-            key={index}
-            content={message.content}
-            role={message.role}
-            isLoading={message.loading}
-          />
-        ))}
+        {messages.length == 0 ? (
+          <IntroductionCards />
+        ) : (
+          messages.map((message, index) => (
+            <Message
+              key={index}
+              content={message.content}
+              role={message.role}
+              isLoading={message.loading}
+            />
+          ))
+        )}
       </div>
       <InputBox
         value={input}

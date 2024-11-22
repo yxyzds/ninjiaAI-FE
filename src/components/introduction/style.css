@@ -1,0 +1,38 @@
+/* 外部容器样式 */
+.guide-container {
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+/* 卡片样式 */
+.guide-card {
+  width: 300px;
+  transition: transform 0.3s ease;
+}
+
+.guide-card:hover {
+  transform: translateY(-5px);
+}
+
+/* 标题样式 */
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* 图标样式 */
+.card-icon {
+  font-size: 24px;
+  color: #08c;
+}
+
+/* 列表项样式 */
+.list-item {
+  padding: 5px 0;
+}
