@@ -9,6 +9,7 @@ import "./index.css";
 import Index from "./routes/index";
 import AuthPage from "./routes/auth/auth";
 import ProtectedRoute from "./ProtectedRoute";
+import Account from "./routes/account/Account";
 // import InviteValidation from "./Invitation/InviteValidation";
 
 const router = createBrowserRouter([
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
       {
         path: "ChatPage/:windowID",
         element: <ChatPage />,
+      },
+      {
+        path: "account",
+        element: <Account />,
       },
     ],
   },

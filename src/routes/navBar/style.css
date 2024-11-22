@@ -19,9 +19,8 @@
 .navbar-container {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   width: 100%;
-  padding: 0 16px;
-  /* max-width: 1600px; */
   margin: 0 auto;
 }
 
@@ -29,6 +28,7 @@
   font-size: 24px;
   color: white;
   cursor: pointer;
+  margin-left: 120px;
 }
 
 /* Logo 样式 */
@@ -37,7 +37,6 @@
   font-weight: bold;
   color: white;
   cursor: pointer;
-  margin-right: 120px;
 }
 
 .navbar-contact {
@@ -69,13 +68,35 @@
   color: #1890ff; /* active 状态字体颜色 */
 }
 
+.navbar-user-icon {
+  width: 30px;
+  height: 30px;
+  background-color: #f0f0f0; /* 灰色背景 */
+  border-radius: 50%; /* 圆形 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer; /* 鼠标指针 */
+  transition: background-color 0.3s ease;
+}
+
+.navbar-user-icon:hover {
+  background-color: #d9d9d9; /* 鼠标悬停时加深灰色 */
+}
+
+.navbar-user-icon .anticon {
+  font-size: 16px; /* 图标大小 */
+  color: #555; /* 图标颜色 */
+}
+
 /* mobile */
 @media (max-width: 768px) {
   .navbar-header {
     max-height: 52px;
   }
-  .navbar-logo {
-    margin-right: 40px;
+
+  .navbar-menu-button {
+    margin-left: 20px;
   }
 }
 
