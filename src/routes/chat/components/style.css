@@ -43,3 +43,74 @@
 .message-content pre {
   overflow-x: auto;
 }
+
+/* 标题样式 */
+.markdown-heading {
+  margin: 20px 0 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+.markdown-heading.h1 {
+  font-size: 24px;
+}
+
+.markdown-heading.h2 {
+  font-size: 20px;
+}
+
+.markdown-heading.h3 {
+  font-size: 18px;
+}
+
+/* 段落样式 */
+.markdown-paragraph {
+  margin: 10px 0;
+  line-height: 1.6;
+  color: #555;
+}
+
+/* 链接样式 */
+.markdown-link {
+  color: #1a0dab;
+  text-decoration: underline;
+}
+
+.markdown-link:hover {
+  color: #0a58ca;
+}
+
+/* 无序列表样式 */
+.markdown-unordered-list {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.markdown-ordered-list {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+/* 列表项样式 */
+.markdown-list-item {
+  margin-bottom: 5px;
+}
+
+/* 行内代码样式 */
+.markdown-inline-code {
+  background-color: #c7e4fd;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: "Courier New", Courier, monospace;
+}
+
+/* 多行代码块样式 */
+.markdown-code-block {
+  background-color: #c7e4fd;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}

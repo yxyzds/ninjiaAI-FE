@@ -93,7 +93,7 @@ export default function ConversationItem({
           dropdownRender={(menu) => (
             <div
               className="conversation-item-editMenu"
-              onMouseDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()} //阻止冒泡，挂载到body后会点击会触发sideBar关闭
             >
               {menu}
             </div>

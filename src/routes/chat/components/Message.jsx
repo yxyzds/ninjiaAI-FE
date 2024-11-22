@@ -28,6 +28,60 @@ const Message = ({ content, role, isLoading }) => {
       });
   };
 
+  const renderers = {
+    // 标题渲染器
+    heading({ level, children }) {
+      const Tag = `h${level}`;
+      return <Tag className={`markdown-heading h${level}`}>{children}</Tag>;
+    },
+
+    // 段落渲染器
+    paragraph({ children }) {
+      return <p className="markdown-paragraph">{children}</p>;
+    },
+
+    // 链接渲染器
+    link({ href, children }) {
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="markdown-link"
+        >
+          {children}
+        </a>
+      );
+    },
+
+    // 无序列表渲染器
+    list({ ordered, children }) {
+      return ordered ? (
+        <ol className="markdown-ordered-list">{children}</ol>
+      ) : (
+        <ul className="markdown-unordered-list">{children}</ul>
+      );
+    },
+
+    // 列表项渲染器
+    listItem({ children }) {
+      return <li className="markdown-list-item">{children}</li>;
+    },
+
+    // 行内代码渲染器
+    code({ className, children }) {
+      const isInline = !className || className.length === 0; // 没有 className 则是行内代码
+      if (isInline) {
+        return <code className="markdown-inline-code">{children}</code>;
+      }
+      return (
+        <pre className="markdown-code-block">
+          <code>{children}</code>
+        </pre>
+      );
+    },
+  };
+
   return (
     <Row
       className={`message ${role === "user" ? "user" : "assistant"}`}
@@ -47,7 +101,7 @@ const Message = ({ content, role, isLoading }) => {
           {isLoading && role === "assistant" ? (
             <Spin size="small" className="loading-spinner" />
           ) : (
-            <ReactMarkdown>{content}</ReactMarkdown>
+            <ReactMarkdown components={renderers}>{content}</ReactMarkdown>
           )}
         </div>
         {role === "assistant" ? (

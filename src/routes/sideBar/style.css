@@ -10,7 +10,6 @@
   border-right: 1px solid #e3e3e3;
   padding: 1rem;
   transition: transform 0.3s ease; /* 平滑动画 */
-  overflow: visible;
 }
 
 .sidebar-container.closed {
