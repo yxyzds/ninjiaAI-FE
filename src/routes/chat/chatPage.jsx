@@ -9,6 +9,8 @@ import { message as messageNotification } from "antd";
 
 import "./style.css";
 
+const EXCEESSDAILYUSAGE = "[ERROR-EXCEESS-DAILYUSAGE]";
+
 function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -43,21 +45,44 @@ function ChatPage() {
       )}&token=${encodeURIComponent(localStorage.getItem("token"))}`
       // { withCredentials: true }
     );
-    // 初始化流数据条目
+
+    const initApply = () => {
+      // 初始化流数据条目
+      const initialTempMessage = {
+        role: "assistant",
+        content: "",
+        loading: true,
+      };
+
+      setMessages((prevMessages) => {
+        return [...prevMessages, initialTempMessage];
+      });
+    };
+
     const initialTempMessage = {
       role: "assistant",
       content: "",
       loading: true,
     };
+
     setMessages((prevMessages) => {
       return [...prevMessages, initialTempMessage];
     });
-
+    
+    //streaming type: {data:"content string" }
     eventSource.onmessage = (event) => {
+      if (event.data === EXCEESSDAILYUSAGE) {
+        messageNotification.error("已超过每日使用限额", 10);
+        eventSource.close();
+        return;
+      }
+
+      // initApply();
       if (event.data === "[DONE]") {
         console.log("Stream ended. Closing connection.");
         // 检测到结束标记后手动关闭连接，防止重连
         eventSource.close();
+        return;
       } else {
         setMessages((prevMessages) => {
           const updatedMessages = [...prevMessages];
@@ -77,11 +102,13 @@ function ChatPage() {
     };
 
     eventSource.onerror = (error) => {
+      console.log(eventSource.readyState);
       if (eventSource.readyState === EventSource.CLOSED) {
         console.log("Connection closed normally.");
       } else {
         eventSource.close();
-        console.error("SSE connection error:", error);
+        console.log(error);
+        messageNotification.error("对话服务错误，请刷新重试");
       }
     };
   };

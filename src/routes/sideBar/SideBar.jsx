@@ -7,13 +7,12 @@ import { getUserInfo, createChatWindow } from "../api";
 import "./style.css";
 import { PlusOutlined } from "@ant-design/icons";
 
-function SideBar({ visible, setVisible }) {
+function SideBar({ visible, setVisible, navRef }) {
   const [conversations, setConversations] = useState([]);
   const navigate = useNavigate();
   const { user } = useUser();
   const sidebarRef = useRef(null);
 
-  //测试跳转逻辑
   if (!user) {
     navigate("/auth");
   }
@@ -22,7 +21,6 @@ function SideBar({ visible, setVisible }) {
     async function fetchUserInfo() {
       try {
         const userInfo = await getUserInfo(user.email);
-        console;
         if (userInfo.status === 200) {
           setConversations(userInfo.data.conversations);
         } else {
@@ -39,7 +37,11 @@ function SideBar({ visible, setVisible }) {
   useEffect(() => {
     // 点击 sidebar 外部区域时关闭 sidebar
     const handleClickOutside = (event) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+      if (
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target) &&
+        !navRef.current.contains(event.target)
+      ) {
         setVisible(false);
       }
     };
