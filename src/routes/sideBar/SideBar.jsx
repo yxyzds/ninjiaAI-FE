@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
-import { message, Row, Col, Button } from "antd";
+import { useState, useEffect, useRef } from "react";
+import { message, Button } from "antd";
 import ConversationItem from "./components/ConversationItem";
-import { Form, useNavigate, Outlet } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useUser } from "../../context/userContext";
 import { getUserInfo, createChatWindow } from "../api";
 import "./style.css";
 import { PlusOutlined } from "@ant-design/icons";
 
 function SideBar({ visible, setVisible, navRef }) {
-  const [conversations, setConversations] = useState([]);
+  const [conversationsBrief, setConversationsBrief] = useState([]);
   const navigate = useNavigate();
   const { user } = useUser();
   const sidebarRef = useRef(null);
@@ -22,9 +22,9 @@ function SideBar({ visible, setVisible, navRef }) {
       try {
         const userInfo = await getUserInfo(user.email);
         if (userInfo.status === 200) {
-          setConversations(userInfo.data.conversations);
+          setConversationsBrief(userInfo.data.conversationsBrief);
         } else {
-          setConversations([]);
+          setConversationsBrief([]);
         }
       } catch (error) {
         message.error("加载用户信息失败，请刷新重试");
@@ -51,14 +51,17 @@ function SideBar({ visible, setVisible, navRef }) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [setVisible, navRef]);
 
   const handleCreateWindow = async () => {
     try {
       const res = await createChatWindow(user.email);
       if (res.status == 201) {
-        setConversations([res.data.conversation, ...conversations]);
-        navigate(`/chatPage/${res.data.conversation.windowID}`);
+        setConversationsBrief([
+          res.data.conversationBrief,
+          ...conversationsBrief,
+        ]);
+        navigate(`/chatPage/${res.data.conversationBrief.windowID}`);
       }
     } catch (err) {
       message.error(err.message);
@@ -66,8 +69,8 @@ function SideBar({ visible, setVisible, navRef }) {
   };
 
   const handleDeleteConversation = (windowID) => {
-    setConversations(
-      conversations.filter((conv) => conv.windowID !== windowID)
+    setConversationsBrief(
+      conversationsBrief.filter((conv) => conv.windowID !== windowID)
     );
   };
   return (
@@ -85,10 +88,10 @@ function SideBar({ visible, setVisible, navRef }) {
         </div>
         <nav>
           <div>
-            {conversations.map((conv) => (
+            {conversationsBrief.map((conv) => (
               <ConversationItem
                 key={conv.windowID}
-                conversation={conv}
+                conversationBrief={conv}
                 setVisible={setVisible}
                 handleDeleteConversation={handleDeleteConversation}
               />

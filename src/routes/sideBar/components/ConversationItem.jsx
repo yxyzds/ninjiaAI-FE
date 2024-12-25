@@ -11,15 +11,15 @@ import "./style.css";
 import { useNavigate } from "react-router-dom";
 
 export default function ConversationItem({
-  conversation,
+  conversationBrief,
   handleDeleteConversation,
   setVisible,
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState(conversation.title);
+  const [title, setTitle] = useState(conversationBrief.title);
   const navigate = useNavigate();
   const handleBlur = async () => {
-    updateWindowTitle(conversation.windowID, title);
+    updateWindowTitle(conversationBrief.windowID, title);
     setIsEditing(false);
   };
 
@@ -56,12 +56,12 @@ export default function ConversationItem({
       key: "delete",
       label: "删除",
       icon: <DeleteOutlined />,
-      onClick: () => handleDeleteWindow(conversation.windowID),
+      onClick: () => handleDeleteWindow(conversationBrief.windowID),
     },
   ];
 
   return (
-    <Row className="conversation-item" key={conversation.windowID}>
+    <Row className="conversation-item" key={conversationBrief.windowID}>
       <Col flex="1" span={20}>
         {isEditing ? (
           <Input
@@ -73,7 +73,7 @@ export default function ConversationItem({
           />
         ) : (
           <NavLink
-            to={`chatPage/${conversation.windowID}`}
+            to={`chatPage/${conversationBrief.windowID}`}
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={closeSidebarInMobile}
           >
