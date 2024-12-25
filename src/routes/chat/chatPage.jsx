@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { getMessageHistory } from "../api";
 import { useParams } from "react-router-dom";
 import { useUser } from "../../context/userContext";
@@ -33,17 +33,18 @@ function ChatPage() {
     };
 
     initMessages();
-  }, [windowID]);
+  }, [windowID, email]);
 
-  const getChatGPTResponse = async (message) => {
+  const getChatGPTResponse = async (message, file) => {
     // 检查请求成功后，建立 SSE 连接
     const eventSource = new EventSource(
-      `${
-        import.meta.env.VITE_API_URL
-      }/chat/conversation?email=${email}&windowID=${windowID}&message=${encodeURIComponent(
-        message
-      )}&token=${encodeURIComponent(localStorage.getItem("token"))}`
-      // { withCredentials: true }
+      `${import.meta.env.VITE_API_URL}/chat/conversation?` +
+        `email=${email}&` +
+        `windowID=${windowID}&` +
+        `message=${encodeURIComponent(message)}&` +
+        `fileKey=${file?.s3Key || ""}&` +
+        `fileName=${file?.fileName || ""}&` +
+        `token=${encodeURIComponent(localStorage.getItem("token"))}`
     );
 
     const initApply = () => {
@@ -52,6 +53,7 @@ function ChatPage() {
         role: "assistant",
         content: "",
         loading: true,
+        referenceFile: file?.fileName,
       };
 
       setMessages((prevMessages) => {
@@ -59,16 +61,7 @@ function ChatPage() {
       });
     };
 
-    const initialTempMessage = {
-      role: "assistant",
-      content: "",
-      loading: true,
-    };
-
-    setMessages((prevMessages) => {
-      return [...prevMessages, initialTempMessage];
-    });
-    
+    initApply(); //待优化，会导致出现对话框但没内容
     //streaming type: {data:"content string" }
     eventSource.onmessage = (event) => {
       if (event.data === EXCEESSDAILYUSAGE) {
@@ -113,16 +106,20 @@ function ChatPage() {
     };
   };
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (input, file) => {
     if (!input.trim()) return;
     // 添加用户消息
     setMessages((prevMessages) => [
       ...prevMessages,
-      { role: "user", content: input },
+      {
+        role: "user",
+        content: input,
+        referenceFile: file?.fileName,
+      },
     ]);
 
     // 获取 ChatGPT 回复
-    await getChatGPTResponse(input);
+    await getChatGPTResponse(input, file);
     setInput("");
   };
 
@@ -138,6 +135,7 @@ function ChatPage() {
               content={message.content}
               role={message.role}
               isLoading={message.loading}
+              referenceFile={message.referenceFile}
             />
           ))
         )}

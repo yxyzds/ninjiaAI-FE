@@ -27,7 +27,7 @@ function SideBar({ visible, setVisible, navRef }) {
           setConversations([]);
         }
       } catch (error) {
-        message.error("Failed to load user info");
+        message.error("加载用户信息失败，请刷新重试");
       }
     }
 

@@ -1,0 +1,29 @@
+.file-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.file-list {
+  margin-top: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.file-item-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.file-name {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.ant-modal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+} 
