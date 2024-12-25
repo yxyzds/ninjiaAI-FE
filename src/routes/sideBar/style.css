@@ -25,6 +25,9 @@
   .sidebar-container {
     flex-direction: row;
   }
+  .sidebar-container {
+    min-width: 200px;
+  }
 
   .sidebar-container.closed {
     transform: translateX(0); /* 始终显示 */

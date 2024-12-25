@@ -114,3 +114,41 @@
   font-size: 14px;
   line-height: 1.5;
 }
+
+.reference-file {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin: 0 0 8px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: start;
+  padding: 8px;
+  border-radius: 6px;
+  width: 100%;
+}
+
+.reference-file-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.reference-file-content {
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+@media screen and (max-width: 768px) {
+  .reference-file {
+    font-size: 11px;
+    padding: 6px;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  
+  .reference-file .anticon {
+    font-size: 11px;
+  }
+}

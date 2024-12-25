@@ -10,7 +10,7 @@
   min-width: 40vw;
   max-width: 920px;
   margin: 0 auto; /* 居中 */
-  padding: 16px 16px 0 16px;
+  padding: 16px 16px 8px 16px;
   background-color: #ffffff;
   overflow-y: auto;
 }

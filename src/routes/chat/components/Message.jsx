@@ -5,12 +5,13 @@ import {
   OpenAIOutlined,
   CopyOutlined,
   CheckOutlined,
+  FileOutlined,
 } from "@ant-design/icons";
-import { Row, Col, message as antdMessage, Spin, Popover } from "antd";
+import { Row, Col, Spin } from "antd";
 
 import "./style.css";
 
-const Message = ({ content, role, isLoading }) => {
+const Message = ({ content, role, isLoading, referenceFile }) => {
   const [copied, setCopy] = useState(false);
   const onCopy = (content) => {
     navigator.clipboard
@@ -20,11 +21,9 @@ const Message = ({ content, role, isLoading }) => {
         setTimeout(() => {
           setCopy(false);
         }, 3000);
-        // antdMessage.success("消息已复制到剪贴板");
       })
       .catch((err) => {
         console.error("复制失败：", err);
-        // antdMessage.error("复制失败，请重试");
       });
   };
 
@@ -97,6 +96,17 @@ const Message = ({ content, role, isLoading }) => {
         </div>
       </Col>
       <Col span={20}>
+        {referenceFile && (
+          <div className="reference-file">
+            <div className="reference-file-label">
+              <FileOutlined />
+              参考文件：
+            </div>
+            <div className="reference-file-content">
+              {referenceFile}
+            </div>
+          </div>
+        )}
         <div className="message-content">
           {isLoading && role === "assistant" ? (
             <Spin size="small" className="loading-spinner" />

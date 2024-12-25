@@ -11,7 +11,7 @@ import {
 import { useUser } from "../../context/userContext";
 import { generateInvitationCode } from "../api";
 
-const Navbar = ({ visible, setVisible }) => {
+const Navbar = ({ visible, setVisible, navRef }) => {
   const { logout, user } = useUser();
 
   const navigate = useNavigate();
@@ -46,7 +46,7 @@ const Navbar = ({ visible, setVisible }) => {
   ];
 
   return (
-    <div className="navbar-header">
+    <div ref={navRef} className="navbar-header">
       <div className="navbar-container">
         {/* 左侧 Logo */}
         <div className="navbar-logo">

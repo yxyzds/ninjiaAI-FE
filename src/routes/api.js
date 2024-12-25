@@ -6,7 +6,7 @@ const token = localStorage.getItem("token");
 // 创建一个 axios 实例
 const apiJson = axios.create({
   baseURL: import.meta.env.VITE_API_URL, // 配置基础 URL
-  timeout: 1000, // 可选: 配置请求超时时间
+  timeout: 8000, // 可选: 配置请求超时时间
   headers: {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
@@ -15,7 +15,7 @@ const apiJson = axios.create({
 
 const apiParams = axios.create({
   baseURL: import.meta.env.VITE_API_URL, // 配置基础 URL
-  timeout: 1000, // 可选: 配置请求超时时间
+  timeout: 8000, // 可选: 配置请求超时时间
   headers: {
     Authorization: `Bearer ${token}`,
   },
@@ -63,7 +63,8 @@ export const getUserInfo = async (email) => {
       );
     }
   } catch (error) {
-    throw new Error(error.response.data.message || "网络请求错误");
+    console.log(error);
+    throw new Error(error, "getUserInfo-网络请求错误");
   }
 };
 
@@ -80,7 +81,7 @@ export const createChatWindow = async (email) => {
       );
     }
   } catch (error) {
-    throw new Error(error.response.data.message || "网络请求错误");
+    throw new Error("网络请求错误，创建聊天窗口失败");
   }
 };
 
@@ -98,7 +99,7 @@ export const editChatWindow = async (windowID, title) => {
       );
     }
   } catch (error) {
-    throw new Error(error.response.data.message || "网络请求错误");
+    throw new Error("网络请求错误，编辑聊天窗口失败");
   }
 };
 
@@ -115,7 +116,7 @@ export const deleteChatWindow = async (windowID) => {
       );
     }
   } catch (error) {
-    throw new Error(error.response.data.message || "网络请求错误");
+    throw new Error("网络请求错误，删除聊天窗口失败");
   }
 };
 
@@ -130,7 +131,7 @@ export const generateInvitationCode = async (email) => {
       throw new Error(`创建邀请码失败: ${res.status},${res.statusText}`);
     }
   } catch (error) {
-    throw new Error(error.response.data.message || "网络请求错误");
+    throw new Error("网络请求错误，创建邀请码失败");
   }
 };
 
@@ -143,6 +144,43 @@ export const getInvitationCode = async (email) => {
       throw new Error(`创建邀请码失败: ${res.status},${res.statusText}`);
     }
   } catch (error) {
-    throw new Error(error.response.data.message || "网络请求错误");
+    throw new Error("网络请求错误，获取邀请码失败");
+  }
+};
+
+export const getUserUploadedFiles = async (email) => {
+  try {
+    const res = await apiParams.get(
+      `/upload/getUserUploadedFiles?email=${email}`
+    );
+    if (res.status == 200) {
+      return res;
+    } else {
+      throw new Error(`获取文件列表失败: ${res.status},${res.statusText}`);
+    }
+  } catch (error) {
+    throw new Error("网络请求错误，获取文件列表失败");
+  }
+};
+
+export const deleteUserUploadedFile = async (email, fileName) => {
+  try {
+    const res = await apiParams.delete(
+      `/upload/deleteUserUploadedFile?email=${email}&fileName=${fileName}`
+    );
+    return res;
+  } catch (error) {
+    throw new Error("网络请求错误，删除文件失败");
+  }
+};
+
+export const getFileStatus = async (email, fileName) => {
+  try {
+    const res = await apiParams.get(
+      `/upload/getFileStatus?email=${email}&fileName=${fileName}`
+    );
+    return res;
+  } catch (error) {
+    throw new Error("网络请求错误，获取文件状态失败");
   }
 };

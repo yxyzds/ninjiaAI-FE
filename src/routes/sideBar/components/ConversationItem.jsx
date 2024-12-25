@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import { deleteChatWindow, editChatWindow } from "../../api";
 import "./style.css";
-import { icons } from "antd/es/image/PreviewGroup";
+import { useNavigate } from "react-router-dom";
 
 export default function ConversationItem({
   conversation,
@@ -17,6 +17,7 @@ export default function ConversationItem({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(conversation.title);
+  const navigate = useNavigate();
   const handleBlur = async () => {
     updateWindowTitle(conversation.windowID, title);
     setIsEditing(false);
@@ -34,6 +35,7 @@ export default function ConversationItem({
     try {
       await deleteChatWindow(windowID);
       handleDeleteConversation(windowID);
+      navigate("/");
     } catch (err) {
       message.error(err.message);
     }

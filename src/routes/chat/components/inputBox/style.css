@@ -1,9 +1,38 @@
+.file-name-display {
+  padding: 6px 6px 0px 6px;
+}
+
+.remove-icon {
+  cursor: pointer;
+  margin-left: 6px;
+}
+
+.file-name-item {
+  display: inline-block; /* 使每个文件名在一行显示 */
+  margin-right: 8px; /* 文件名之间的右侧间距 */
+  padding: 5px 10px; /* 内边距 */
+  border: 1px solid #d9d9d9; /* 边框颜色可调整 */
+  border-radius: 12px; /* 弧形边框 */
+  font-size: 18px; /* 字体大小 */
+  line-height: 22px; /* 行高 */
+  background-color: #f0f0f0; /* 背景色，可根据需要调整 */
+}
+
 .input-box-container {
   position: sticky;
   bottom: 0;
   left: 0;
-  width: 100%;
   z-index: 99;
+  border-width: 1px;
+  border-radius: 1rem;
+  border-color: #0c2d65;
+  border-style: solid;
+  background-color: white;
+  margin: 0px 4px 0px 4px;
+}
+
+.input-box-gutter {
+  width: 4px;
 }
 
 .input-box-wrapper {
@@ -20,16 +49,45 @@
 }
 
 .input-area {
-  flex: 1;
-  border-radius: 20px;
-  border: 1px solid #d9d9d9;
-  padding: 8px 12px;
+  width: 100%;
+  border: 0px; /* 取消边框 */
+  outline: none; /* 取消聚焦时的轮廓 */
+  background: transparent; /* 设置背景为透明 */
+  margin: 24px 8px;
+  resize: none; /* 禁用调整大小 */
+  box-sizing: border-box; /* 确保包含填充在内 */
+  font-size: 16px; /* 根据需要调整字体大小 */
+  color: inherit; /* 继承父元素的文字颜色 */
+  box-shadow: none;
+  max-height: 30vh;
+  resize: "none";
+  overflow-y: auto;
+}
+
+.input-area:focus,
+.input-area:hover {
+  border: none; /* 确保没有边框 */
+  outline: none; /* 确保没有聚焦样式 */
+  background: transparent; /* 保持背景透明 */
+  box-shadow: none;
 }
 
 .send-button {
   position: absolute;
   bottom: 10px;
   right: 10px;
+  z-index: 1; /* 确保按钮在最上层 */
+  background-color: rgb(35, 116, 153);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+
+.upload-button {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
   z-index: 1; /* 确保按钮在最上层 */
   background-color: rgb(35, 116, 153);
   color: white;
