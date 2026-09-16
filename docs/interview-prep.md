@@ -336,6 +336,24 @@ app/layout.tsx  ('use client')
 
 #### 6.4 正确画法：Server 壳 + 瘦 providers + 叶子上的岛
 
+**Provider 是什么（先把词说清）**
+
+Provider 不是 Next 的新 API，就是 React 的「外面包一层，把依赖往下传」。常见两类：
+
+1. **Context Provider**：上面放一份数据/方法，下面任意深层用 `useContext` 取，不用一层层 props。本仓库的 `UserProvider` 就是：
+
+```jsx
+<UserContext.Provider value={{ user, logout, setUser }}>
+  {children}
+</UserContext.Provider>
+```
+
+`ChatPage`、`SideBar`、`Login` 都 `useUser()`，并不从父组件接收 `user`。`main.jsx` 里 `/` 和 `/auth` 各包了一层 `UserProvider`。
+
+2. **库的 Provider**：antd 的 `ConfigProvider`（主题、中文包）、`AntdRegistry`/`StyleProvider`（App Router 下把样式插进 HTML）。它们也是「包一层，让整棵子树能用这套配置」。
+
+面试稿里的 `app/providers.tsx` 只是一个 **自定义文件名**：把上面这些必须是 client 的外壳叠在一起，给 Server 的 `layout.tsx` 当一个岛用。不是框架内置组件，叫 `ClientShell.tsx` 也行。之所以单独拆，是因为 layout 本身要保持 Server，而这些 Provider 内部有 `useState` / Context，必须 `'use client'`。
+
 目标不是「消灭所有 client」，而是 **client 只出现在真正需要浏览器的叶子，并且不要从 root layout 静态引用重岛**。
 
 ```
