@@ -190,121 +190,328 @@ Vite 生产默认 esbuild minify。面试提到「开 gzip/brotli 在 Nginx / CD
 
 ### Q6. 如果用 Next.js，包优化你怎么做？（选一条主线讲透）
 
-面试别报清单。选一条做过的主线：
+面试别报清单。选一条做过的主线，然后把因果讲完：
 
-> **北极星是每条路由的 First Load JS，手段是把 `'use client'` 往叶子推，再用 `optimizePackageImports` 收 antd 桶文件。**
+> **北极星是每条路由的 First Load JS。先量清楚谁进了 shared，再把 `'use client'` 往叶子推，最后才用 `optimizePackageImports` 收 antd 桶文件。**
 
-这套是 App Router 上真正吃过亏才会说的。Pages Router 时代的人爱谈 webpack splitChunks；App Router 上最大的包往往不是「没配置」，而是 **layout 变成了整站 Client 根**。
+Pages Router 时代的人爱谈 webpack `splitChunks`。App Router 上包变大，通常不是「没配 webpack」，而是 **root layout 变成了整站 Client 根**：要挂 UserContext、antd `ConfigProvider`，再把 SideBar 塞进 layout。登录页也会下载侧栏、Markdown、上传弹窗，`shared by all` 下不来，RSC 等于没了。
 
-#### 90 秒口述（建议背）
-
-> 聊天这种产品迁到 Next，我不会先改 webpack。先 `next build` 看两条数：`First Load JS shared by all`，以及 `/`、`/auth`、`/chat/[id]` 各自的 First Load。
->
-> 典型事故是 root `layout.tsx` 标了 `'use client'`——因为要挂 UserContext、antd `ConfigProvider`、还把 SideBar 放进 layout。结果登录页也下载侧栏、聊天 Markdown、上传弹窗。RSC 等于没了，shared JS 居高不下。
->
-> 我的改法是：layout 保持 Server；单独做一层很瘦的 `providers.tsx`（只包 Auth + AntdRegistry）；SideBar 是 layout 里的 client island，**从 providers 里拿掉**，避免 import 链把 `api.js` / 图标全送进 shared。聊天页的 `react-markdown` 用 `next/dynamic`，进会话才加载。antd / icons 开 `optimizePackageImports`，让 `import { Button } from 'antd'` 被改写成路径导入。middleware 只做 JWT 过期跳转，绝不 import 业务 `api.js`。每改一次对着同一条路由重新 `next build` 对比 First Load，并用 `@next/bundle-analyzer` 看 treemap 里是不是 barrel 和误升的 client 树。
-
-#### 为什么这条主线像「认真做过」
-
-| 没做过会说的 | 做过会盯的 |
-| --- | --- |
-| 用 `dynamic import`、开压缩、上 CDN | `shared by all` 为什么高；是哪条 import 链打进来的 |
-| 把所有组件都 `ssr: false` | 只对「浏览器 only」的叶子关 SSR（markdown/上传），壳还是 RSC |
-| antd 换成按需插件就完了 | App Router 里桶文件 + Client 边界叠加，要 `optimizePackageImports`，还要禁止 Server Component 直接 `import 'antd'` |
-| 拆越细越好 | 拆完要对同一路由看 First Load；拆过头只是多请求，shared 没降 |
-
-#### 对照本产品，Client 边界怎么画
-
-没做过会把整棵树标成 client。做过会按 **岛** 画：
-
-```
-app/layout.tsx                    Server：html、next/font、metadata。禁止 antd / axios
-app/providers.tsx                 Client：UserProvider + AntdRegistry，保持极瘦
-app/middleware.ts                 Edge：只 jwt-decode + 跳 /auth。禁止 import ./routes/api
-app/(main)/layout.tsx             Server 壳 + 一个 <Sidebar /> island
-app/(main)/page.tsx               Server 欢迎文案；conversationsBrief 可在 Server 拉完当 props
-app/(main)/chat/[windowID]/page.tsx
-                                  Server 可拉历史；消息列表 / SSE / InputBox 才是 Client
-app/(auth)/auth/page.tsx          独立 route group，layout 不挂 Sidebar
-components/markdown-message.tsx   next/dynamic，ssr:false 或至少不进 shared
-components/file-modal.tsx         打开弹窗才 import
-```
-
-对应今天 Vite 代码里的问题，迁过去会自动暴露：
-
-1. `main.jsx` 静态 import 全站 → Next 按目录拆路由，但 **layout 里 import ChatPage 会立刻把收益打回原形**。
-2. `SideBar.jsx` import antd Button/icons + `api.js` → 放进 root layout 就会进 `shared by all`。登录页不需要侧栏，要用 route group 把 `(auth)` 和 `(main)` 拆开。
-3. `Message.jsx` 顶层 `import ReactMarkdown` → 必须留在 chat 叶子，用 `dynamic()`。
-4. `FileModal` 写死 localhost、依赖 Upload/Modal → 弹窗级 dynamic，不要从 InputBox 静态链路进首屏。
-5. `jwt-decode` 可以出现在 middleware；`axios` 不行（Edge 体积 + Node API）。
-
-#### 操作顺序（体现判断力，不要倒过来）
-
-**1. 量。** `next build` 把 `/auth`、`/`、`/chat/[id]` 的 First Load 记下来。`ANALYZE=true` 开 `@next/bundle-analyzer`。同时分清三笔账，别混着报数字：
-
-- Client JS：下载 + 解析 + hydrate（包优化主战场）
-- RSC Flight payload：Server 传来的树和数据（`conversationsBrief` 放 Server 会走这个，不是 JS）
-- CSS：antd 样式可能看起来像「JS 没小」
-
-**2. 收 Client 边界。** 从根到叶问：这个文件为什么要 `'use client'`？常见误升：文件顶部 import 了一个 client 模块，整文件变 client，父 Server Component 跟着废掉。聊天页只要 InputBox / SSE / 复制按钮是 client，历史列表外壳可以 Server 先吐。
-
-**3. 再抠依赖。** 边界对了，配置才有用：
-
-```js
-const nextConfig = {
-  experimental: {
-    optimizePackageImports: ["antd", "@ant-design/icons"],
-  },
-};
-```
-
-（较新版本里这个配置已升到顶层 `optimizePackageImports`，面试说「等价于编译期把桶导入改写成 `antd/es/button`」即可。）
-
-```js
-const MarkdownMessage = dynamic(() => import("./MarkdownMessage"), {
-  loading: () => <Spin />,
-  ssr: false, // markdown 首屏不是 LCP，可关 SSR 换更小的首包
-});
-```
-
-**4. 清 Edge / 共享模块。** middleware 误 import `src/routes/api.js`（axios 实例、拦截器、一堆 REST 函数）是真实项目里很常见的「突然 +200KB」来源。鉴权中间件单独写 20 行。
-
-**5. 再 build 同一条路由。** shared 降了、`/auth` 不再含 markdown / FileModal，才算成。登录页 First Load 明显低于聊天页，说明 route group 和 dynamic 生效。
-
-#### 和当前 Vite 方案怎么衔接（被问「那你为啥不直接上 Next」）
-
-对这个体量：**先在 Vite 做 `React.lazy` + `manualChunks` 就能拿掉大部分首屏 JS**，不必为了拆包迁框架。Next 的额外收益是：
-
-- 路由级拆包是默认的，不用手写 lazy
-- 欢迎页 / 会话摘要可以 RSC，首屏少一段 `getUserInfo` 瀑布
-- `next/font` 避免字体闪和额外请求
-- middleware 在边缘做登录跳转，少一次客户端白屏再 redirect
-
-迁 Next 的成本是 antd 的 App Router 适配（`AntdRegistry`、CSS-in-JS）、`'use client'` 纪律、SSE 仍只能在 client。所以面试收口：**包优化策略跨框架是同一套；Next 只是把成绩单变成 First Load JS，把最大风险从「忘了 lazy」变成「layout 标成了 client」。**
-
-#### 追问速查（Next 专项）
-
-**`optimizePackageImports` 和 `modularizeImports` 什么关系？**  
-后者是老配置，手写 `antd` → `antd/es/{{member}}`。前者是 Next 内置的 barrel 优化，lodash、lucide、antd、icons 这类「一个 index 再导出几百个」最吃这个。没有它，tree-shaking 经常败给副作用和 CJS。
-
-**为什么 Server Component import antd 会出事？**  
-antd 组件要事件和 Context，本质是 client。Server 文件 import 它，这条模块图会把该 Server 树变成 client bundle，或者直接 build 报错。正确是：Server 页只传数据，UI 岛自己 import antd。
-
-**`dynamic` 的 `ssr:false` 会不会伤 SEO / LCP？**  
-聊天气泡、上传弹窗没有 SEO 价值，LCP 也不该是 Markdown。壳子（标题、侧栏骨架）继续 SSR。整页 `ssr:false` 才是错的。
-
-**middleware 能不能 jwt-decode？**  
-能，库很小。不能顺手 import 带 axios / antd 的业务模块。Edge bundle 和页面 JS 是两份包，要分开看体积。
-
-**RSC 数据算包优化吗？**  
-算「首屏必须下载的字节」，但不是 JS parse。把 `conversationsBrief` 放到 Server fetch，省的是客户端 axios + 瀑布，Flight payload 仍在。报优化结果时要说清省的是哪一笔。
-
-**和 Vite `manualChunks` 怎么类比？**  
-Vite 手动把 antd / markdown 打进 async chunk ≈ Next 里「别从 layout import 它们 + `dynamic`」。Next 不需要你写 `manualChunks` 才能按路由拆；你需要保证 **不要从 shared layout 把它们又并回去**。
+下面按「成绩单怎么读 → 事故怎么发生 → 边界怎么收 → 依赖怎么抠 → 怎么验收」讲，可以当口述稿。
 
 ---
 
+#### 6.1 成绩单到底是什么
 
+`next build` 结束会打一张路由表，每一行大概长这样（数字是示意，面试讲结构即可）：
+
+```
+Route                     Size     First Load JS
+┌ ○ /                     2 kB          142 kB
+├ ○ /auth                 8 kB          118 kB
+├ λ /chat/[windowID]     35 kB          210 kB
+└ ○ /account              4 kB          125 kB
++ First Load JS shared by all            87 kB
+```
+
+要会拆这三列，否则数字会对不上嘴：
+
+1. **Size（路由自己的 JS）**  
+   只有进这个 URL 才下载的部分。聊天页的 `react-markdown`、SSE 逻辑、FileModal 理应主要落在这里。
+
+2. **First Load JS（打开这个 URL 必须下载的全部 JS）**  
+   `= shared by all + 这条路由的同步 client 依赖`。用户第一次进 `/auth` 或 `/chat/xxx`，浏览器为了可交互要拉的就是这个。它才是首屏包。只看 Size 会误判：聊天页 Size 35kB 看起来不疼，First Load 210kB 才是用户付的钱。
+
+3. **First Load JS shared by all**  
+   所有路由都会带上的公共 client 包。来源几乎总是 `app/layout.tsx` 的模块图：layout 静态 import 的每一个 client 模块，都会进 shared。framework runtime（React / Next）也在这里，这部分降不掉，能降的是 **你自己挂到 layout 上的业务**。
+
+所以「做过」的第一句话不是「我用了 dynamic」，而是：
+
+> 我先记下 `/auth`、`/`、`/chat/[id]` 三条 First Load，以及 shared 那一行。优化目标是：登录页明显轻于聊天页；shared 里没有 markdown、没有 Upload、没有会话列表。
+
+还要分清三笔账，别把它们加在一起报「包小了 40%」：
+
+| 账本 | 是什么 | 谁在付代价 |
+| --- | --- | --- |
+| Client JS（First Load） | 下载 + 解析 + hydrate | 主线程，FCP/TTI |
+| RSC Flight payload | Server 传来的组件树和数据 | 网络，几乎不占 JS parse |
+| CSS | antd 样式、全局 CSS | 下载和首次绘制，analyzer 里常和 JS 挤在一起 |
+
+`conversationsBrief` 如果改成 Server Component 里 fetch，再当 props 传给 client 侧栏：省的是客户端 axios 调用和瀑布，**不是**把数据从网线里抹掉，数据会走 Flight。面试被追问「那包真的小了吗」就答：JS parse 小了，首屏请求链短了，Flight 仍在，两笔要分开说。
+
+Vite 对照：SPA 没有「分路由 First Load」，只有「首屏必须执行的那一个大包」。`rollup-plugin-visualizer` 里标红的同步模块，约等于 Next 的 shared + 当前页 Size。Next 把成绩单按路由拆开了，所以更能证明「登录页没夹带聊天」。
+
+---
+
+#### 6.2 为什么 App Router 默认就该更小，以及它怎么被搞大
+
+默认模型：
+
+- 文件 **没有** `'use client'` → Server Component。代码跑在 Node，**不进浏览器 JS**（除非它 import 了 client 模块，见下）。
+- 只有带 `'use client'` 的文件，以及被它静态 import 的整条依赖链，才会打进 Client bundle。
+- 路由是目录，`app/auth/page.tsx` 和 `app/chat/[windowID]/page.tsx` 默认不会打进同一条同步图。这就是「不用手写 React.lazy 也能按路由拆」。
+
+因此，Next 包优化的胜负手不是 splitChunks，而是：**哪些文件被迫变成了 client，以及这些 client 文件被谁静态 import。**
+
+`'use client'` 不是「这个组件在浏览器渲染」这么简单，它是一条 **模块边界**：
+
+- 标了 `'use client'` 的文件，自己整份进 client bundle。
+- 它顶层 `import` 的所有本地模块、antd、axios、markdown，即使那些文件没写 `'use client'`，也会被卷进 client 图（因为 client 不能在运行时再去执行一段没下发的 Server 模块）。
+- 更关键的是 **父级**：Server Component 可以渲染一个 client 子组件，这是合法的「岛」。但反过来，client 父组件里写 `import Sidebar from './Sidebar'`，Sidebar 无论能不能做成 Server，都已经在 client 图里了。
+
+所以「把 `'use client'` 往叶子推」的意思是：
+
+> 让需要 hooks / 事件 / 浏览器 API 的文件自己当岛；它的祖先继续当 Server。祖先用 `<Sidebar />` 引用岛，而不是把岛的实现 import 进一个巨大的 client layout。
+
+---
+
+#### 6.3 典型事故：root layout 标成 `'use client'`（对照本仓库细讲）
+
+这个产品迁过去，最自然、也最容易写错的第一版，几乎就是今天 `main.jsx` + `root.jsx` 的翻版：
+
+```tsx
+// app/layout.tsx  —— 错误示范，但非常常见
+"use client";
+import { UserProvider } from "@/context/userContext";
+import { ConfigProvider } from "antd";
+import Sidebar from "@/components/Sidebar";
+import Navbar from "@/components/Navbar";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <UserProvider>
+          <ConfigProvider>
+            <Navbar />
+            <Sidebar />
+            {children}
+          </ConfigProvider>
+        </UserProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+为什么会这样写，面试要主动说出来，显得你理解约束，而不是背「layout 不要 use client」：
+
+1. `UserProvider` 里有 `useState` / `useNavigate`，必须是 client。今天的 `userContext.jsx` 就是这样。
+2. antd 5 的 `ConfigProvider`、`message` 要用 React Context 和浏览器，必须是 client。
+3. 今天的 `Root` 里 Navbar + SideBar 包着所有已登录页，迁 Next 时最省事就是塞进 root layout，好让 `/` 和 `/chat/[id]` 共用。
+4. layout 一旦要 import 这些东西，文件顶部就会被加上 `'use client'`。有人还会图省事把 `children` 整棵树放进这个 client 根里。
+
+然后模块图变成这样（对照现有源码）：
+
+```
+app/layout.tsx  ('use client')
+  ├─ userContext.jsx          → react, 可能再带 router
+  ├─ antd ConfigProvider      → antd 运行时 + 一串样式
+  ├─ navBar.jsx               → antd Button/icons
+  ├─ SideBar.jsx              → antd Button/message/icons
+  │     └─ ../api.js          → axios 实例、拦截器、所有 REST
+  │     └─ ConversationItem   → 又一层 antd Input/Dropdown
+  └─ {children} 仍在这个 client 根下
+        即便 chat/page.tsx 想当 Server，父级已是 client，
+        这条子树的「Server」收益会被吃掉
+```
+
+后果要讲具体，不要只说「包变大」：
+
+- **shared by all 被抬起来。** layout 是所有路由的祖先，它的 client 图 = 每个 URL 的 First Load 起步价。`/auth` 也会下载 SideBar、axios、会话列表相关 antd。用户还没登录，就在为登录后的壳买单。
+- **RSC 名存实亡。** 页面文件即使不写 `'use client'`，只要被 client layout 当作 children 包住，且页面自己又 import 了 client 工具，很容易整页按 client 交。欢迎页那几行静态文案，本可以零业务 JS，现在要 hydrate 一整棵壳。
+- **路由拆包失效。** Next 按目录拆的是「页面自己的模块」。你把 ChatPage / Markdown 从 layout 静态 import（或从 Sidebar 间接 import）等于手动把它们并回 shared。这和今天 `main.jsx` 静态 import `ChatPage` 是同一类错误，只是换了个框架。
+- **登录跳转变胖。** 未登录用户打到 `/auth`，本来只要表单。现在 First Load 接近已登录壳。middleware 再若 import 了 `src/routes/api.js`，Edge 那份包还要再付一次 axios。
+
+用今天的 Vite 代码举例 import 链，面试官一听就知道你读过项目：
+
+- `SideBar.jsx` 顶部：`antd` 的 `Button/message`、`@ant-design/icons` 的 `PlusOutlined`、`../api` 的 `getUserInfo/createChatWindow`。只要 Sidebar 进 layout，这些全部进 shared。
+- `ConversationItem.jsx`：`Input/Dropdown/Menu` + `deleteChatWindow/editChatWindow`。侧栏列表项也会进 shared。
+- `Message.jsx`：顶层 `import ReactMarkdown from "react-markdown"`。它若被 ChatPage 静态 import，ChatPage 若再被 layout 或某个 shared client 引用，markdown 就进 First Load；即便只在聊天路由引用，也会进 `/chat/[id]` 的同步 Size，而不是点开消息才加载。
+- `InputBox.jsx` 静态 import `FileModal`，FileModal 又拉 `Upload/Modal/List` 和上传 API。发送框在聊天页是常驻的，等于打开对话就把上传弹窗整套打进这条路由的同步 JS。
+- `jwt-decode` 很小，放 layout 或 middleware 都可；危险的是和 axios 写在同一个 `api.js` 里被一起 import。
+
+这就是「root layout 标成 `'use client'` 之后，登录页也会下载侧栏、Markdown、上传弹窗」的完整因果，不是一句口号。
+
+---
+
+#### 6.4 正确画法：Server 壳 + 瘦 providers + 叶子上的岛
+
+目标不是「消灭所有 client」，而是 **client 只出现在真正需要浏览器的叶子，并且不要从 root layout 静态引用重岛**。
+
+```
+app/layout.tsx                         保持 Server
+  html / body / next/font / metadata
+  <Providers>                          唯一从 root 引入的 client，且极瘦
+    {children}
+  </Providers>
+
+app/providers.tsx                      'use client'
+  AntdRegistry + ConfigProvider + UserProvider
+  禁止 import Sidebar / Chat / markdown / api.js
+
+app/(auth)/layout.tsx                  无 Sidebar
+app/(auth)/auth/page.tsx               登录表单自己当 client 页或表单岛
+
+app/(main)/layout.tsx                  仍可以是 Server
+  <Navbar />                           client 岛（菜单、登出）
+  <Sidebar />                          client 岛（列表、创建、删除）
+  {children}
+
+app/(main)/page.tsx                    Server：欢迎文案
+                                       conversationsBrief 可在这里或 layout 里 fetch 再当 props 递给 Sidebar
+
+app/(main)/chat/[windowID]/page.tsx    Server 负责拉历史更好
+  <ChatTranscript initialMessages={} />  client 岛：SSE、输入框
+       └─ MarkdownMessage              next/dynamic，不要顶层 import react-markdown
+       └─ FileModal                    打开弹窗再 import
+
+middleware.ts                          只 jwt-decode + 过期跳 /auth
+                                       禁止 import src/routes/api.js
+```
+
+几个容易讲含糊的点，展开说：
+
+**（1）为什么 providers 要单独拆，而且必须瘦？**  
+layout 要保持 Server，才能继续当 RSC 根、才能写 `metadata` / `next/font`。但 Auth 和 antd 必须 client，所以抽 `providers.tsx`。这里 **只允许** Context 外壳。你如果在 providers 里顺手 `<Sidebar />`，Sidebar 的 axios/antd 又会回到 shared——等于事故换了个文件名。  
+「从 providers 里拿掉 Sidebar」不是矫情：providers 挂在 root，auth 路由也会包到它。Sidebar 只能放在 `(main)/layout.tsx`。
+
+**（2）为什么要用 `(auth)` / `(main)` route group？**  
+括号目录不进 URL。作用是 **两套 layout**：登录页没有侧栏，已登录壳才有。这是降 `/auth` First Load 的结构手段，比在一个 layout 里 `if (pathname)` 藏 Sidebar 更干净——后者仍然可能静态 import Sidebar。
+
+**（3）Sidebar 放 `(main)/layout` 会进聊天页和首页的 shared，这可以接受。**  
+已登录用户三个页都要用侧栏，这份 JS 是该付的。不能接受的是让 **未登录路由** 也付。优化是「按产品壳分层」，不是「每个按钮一个 chunk」。
+
+**（4）`'use client'` 写在叶子，父级怎么传数据？**  
+Server layout / page 里 `const data = await getConversationsBrief()`，然后 `<Sidebar initial={data} />`。岛内部再 `useState(initial)` 做创建/删除。这样首屏列表不必等客户端 axios，JS 里也不必为了首屏去打包一整份 getUserInfo 调用链——调用链仍可能在岛里（因为还要「新聊天」），但至少首屏 HTML 已经有列表。这是 RSC 真正的包优化：少一段必须 hydrate 完才能发的瀑布。
+
+**（5）Chat 页不要整页 `'use client'`。**  
+需要 hooks 的是：SSE EventSource、受控输入、复制按钮。历史消息如果只是服务端拉下来的静态 Markdown，外壳可以 Server 渲染，只有正在流式的那一条是 client。退一步：整页 client 也行，但 **不要在 page 顶层 import react-markdown 和 FileModal**。用 `dynamic()` 把它们从同步图里拿出去。
+
+```tsx
+const MarkdownMessage = dynamic(() => import("./MarkdownMessage"), {
+  loading: () => <Spin size="small" />,
+  ssr: false,
+});
+```
+
+`ssr: false` 的理由要说完整：markdown 不是 LCP（LCP 更可能是侧栏或欢迎文案），也没有 SEO 价值；关 SSR 可以让首包不含 `react-markdown` 的解析器。壳子继续 SSR。整页 `ssr: false` 才是错的，那会回到今天这种空 HTML 等 JS。
+
+FileModal 同理：`InputBox` 里不要顶层 import，改成打开时 `import()`，或 `dynamic` 且默认不渲染。今天的静态 `import FileModal` 会把 antd Upload/Modal 绑死在聊天页同步 JS 上。
+
+---
+
+#### 6.5 边界收完，才轮到 `optimizePackageImports`
+
+即使 Client 边界对了，`import { Button, message } from "antd"` 和 `import { PlusOutlined } from "@ant-design/icons"` 仍可能把桶文件卷进来。antd、icons、lodash 这类包的 `index.js` 是「再导出几百个模块」的 barrel。打包器从入口静态分析时，经常因为：
+
+- CJS / ESM 互操作
+- 文件里的副作用（样式 import、prototype 修改）
+- `export *`
+
+而放弃 tree-shaking，于是你只用了 Button，图里仍有一堆无关组件。
+
+`optimizePackageImports: ["antd", "@ant-design/icons"]` 做的事情很具体：编译期把
+
+```js
+import { Button } from "antd";
+```
+
+改写成类似
+
+```js
+import Button from "antd/es/button";
+```
+
+的路径导入（ lucide / lodash-es 同理）。这不是运行时魔法，是让打包器看到「只引用这一个文件」，tree-shaking 才能成立。老配置叫 `modularizeImports`，要自己写 `antd/es/{{member}}`；新的内置名单覆盖了 antd、icons、lucide 这些重灾区。
+
+面试时强调顺序：**先把 Sidebar / Markdown 移出 root client 图，再开这个选项。** 否则只是「shared 里那份巨大 antd 变得略小一点」，登录页该夹带的还是夹带。analyzer 里如果仍能看到 `antd/es/upload`、`react-markdown` 出现在 `/auth` 的图里，说明边界没收完，不是配置没生效。
+
+antd 还有一层 App Router 成本：CSS-in-JS 要 `AntdRegistry`（StyleProvider）包在 client providers 里，否则样式闪或丢。这会增加一点 runtime，但不要为了躲它把整个 layout 标成 client——那才是因小失大。
+
+Server Component **不要**直接 `import { Button } from "antd"`。Button 要事件，本质是 client。Server 文件一 import，轻则这条 Server 树被卷成 client bundle，重则 build 报错。正确是：Server 只传数据，岛内部自己 import antd。
+
+---
+
+#### 6.6 操作顺序（倒过来会像没做过）
+
+**第 1 步：量，写下三条路由的数。**  
+`next build`。记录 shared、`/auth`、`/`、`/chat/[id]` 的 First Load。`ANALYZE=true` 开 `@next/bundle-analyzer`，在 treemap 里点 `antd`、`react-markdown`、`axios`，看它们出现在哪条路由。问自己：为什么 `/auth` 的图里有 `PlusOutlined`？顺着 import 回溯，一般会回到 layout 或 providers。
+
+**第 2 步：收 Client 边界。**  
+从根往叶问每个 `'use client'`：「这里用了 hooks / 浏览器 API 吗？能不能把这句话移到子文件？」常见误升：一个本可以 Server 的 `page.tsx` 顶部 import 了带 `'use client'` 的 `utils`，或者 import 了 `api.js` 里某个顺带拉起 axios 的函数。文件一旦进 client 图，它的整份依赖都进。
+
+**第 3 步：按壳分层。**  
+`(auth)` 和 `(main)` 拆 layout；Sidebar 只存在于 `(main)`。providers 瘦到只剩 Context。
+
+**第 4 步：叶子上再 dynamic。**  
+markdown、FileModal、可能还有账号页的邀请码二维码，这些不是壳。用 `next/dynamic` 从同步图拿掉。
+
+**第 5 步：抠桶文件。**  
+`optimizePackageImports`。必要时 icons 改成直接路径，避免 `import * as Icons`。
+
+**第 6 步：清 Edge。**  
+middleware 单独 20 行：读 cookie / token、`jwtDecode`、过期 `NextResponse.redirect`。不要 import 今天的 `src/routes/api.js`（axios 实例 + 全部 REST）。Edge bundle 和页面 JS 是两份成绩单，要分开看。axios 在 Edge 里体积和 Node API 都不合适。
+
+**第 7 步：同一条路由再 build。**  
+验收标准讲清楚才像做过：
+
+- `/auth` First Load 明显低于 `/chat/[id]`（登录不再夹带侧栏和 markdown）
+- shared 里找不到 `react-markdown`、`antd/es/upload`
+- 聊天页 Size 上升、First Load 的增量来自路由自己，而不是 shared 被一起抬高
+- 点进对话后 Network 里才出现 markdown chunk；打开附件后才出现 Upload chunk
+
+shared 没降、只是多了几个小 chunk，说明拆过头或边界没动，只是心理安慰。
+
+---
+
+#### 6.7 和当前 Vite 方案怎么衔接（被问「那为什么不直接上 Next」）
+
+对这个体量：**先在 Vite 做 `React.lazy` + `manualChunks` 就能拿掉大部分首屏 JS**，不必为了拆包迁框架。对应关系要讲明白：
+
+| 今天 Vite 的问题 | Next 里等价的收法 |
+| --- | --- |
+| `main.jsx` 静态 import 全站 | 不要在 `app/layout.tsx` 静态 import 页面级组件 |
+| 没有 `React.lazy` | App Router 默认按目录拆；仍要防止 layout 把它们并回 shared |
+| `manualChunks: { antd, markdown }` | markdown 用 `dynamic`；antd 用边界 + `optimizePackageImports` |
+| 登录和聊天同一张模块图 | `(auth)` / `(main)` 两套 layout |
+| 首屏等 JS 才能画壳 | Server layout + RSC 先吐 HTML，岛再 hydrate |
+
+Next 多出来、Vite 不容易白嫖的部分：
+
+- 欢迎页 / 会话摘要可以 Server fetch，少一轮客户端 `getUserInfo` 瀑布
+- `next/font` 把字体打进构建，避免 Google Fonts 阻塞
+- middleware 在边缘跳登录，少一次「先出 SPA 再 redirect」的白屏
+
+成本也要说：antd 的 `AntdRegistry`、全员 `'use client'` 纪律、SSE / EventSource 仍然只能在 client（Token 进 URL 的问题框架解决不了）。所以收口是：
+
+> 包优化策略跨框架是同一套：先看首屏必须下载的 JS，再砍同步依赖。Next 只是把成绩单变成 First Load JS，把最大风险从「忘了 lazy」变成「layout 标成了 client」。我不会为了拆包而迁框架；若已经在 Next 上，我也不会先去调 webpack。
+
+---
+
+#### 6.8 追问速查（Next 专项）
+
+**`optimizePackageImports` 和 `modularizeImports` 什么关系？**  
+后者是老配置，手写 `antd` → `antd/es/{{member}}`。前者是 Next 内置的 barrel 改写，lodash、lucide、antd、icons 最吃这个。没有它，tree-shaking 经常败给副作用和 CJS。它解决「用了 Button 却打进半个 antd」；不解决「layout 把 Button 打进了所有路由」。
+
+**为什么 Server Component import antd 会出事？**  
+antd 组件要 onClick 和 Context，必须是 client。Server 文件 import 它，模块图会把该树卷进 client，或直接 build 失败。Server 页只传 props，岛内部再 import。
+
+**`dynamic` 的 `ssr:false` 会不会伤 SEO / LCP？**  
+聊天气泡、上传弹窗没有 SEO 价值，LCP 也不该是 Markdown。壳（标题、侧栏骨架、欢迎文案）继续 SSR。整页 `ssr:false` 会回到现在这种空 `#root`。
+
+**middleware 能不能 jwt-decode？**  
+能，库很小。不能顺手 import 带 axios / antd 的业务模块。Edge 包和页面 JS 分开计量。
+
+**RSC 数据算包优化吗？**  
+算「首屏必须下载的字节」，但不是 JS parse。报结果时说清省的是 Client JS 还是 Flight / 瀑布。
+
+**和 Vite `manualChunks` 怎么类比？**  
+Vite 手动把 antd / markdown 打进 async chunk ≈ Next 里「别从 layout import 它们 + `dynamic`」。Next 不需要你写 `manualChunks` 才能按路由拆；你需要保证不要从 shared layout 把它们又并回去。
+
+**能不能把所有组件都标 `'use client'`，只靠 dynamic 拆？**  
+能跑，但 First Load 仍会包含所有同步 import 的岛。dynamic 只对 **异步 import 的叶子** 有效。父级 client layout 里静态 `import Sidebar`，Sidebar 永远在 shared。所以边界是第一刀，dynamic 是第二刀。
+
+---
 
 ## 三、高并发
 
